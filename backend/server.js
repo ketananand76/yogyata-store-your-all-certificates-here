@@ -57,27 +57,47 @@ app.use((req, res, next) => {
   next();
 });
 
+// Import new controllers
+const {
+  registerUser,
+  loginUser,
+  logoutUser,
+  getMe: getMeUser,
+  getUserCertificates,
+  uploadUserCertificate,
+  deleteUserCertificate,
+} = require('./controllers/userPortalController');
+const { getUsersAndCertificates } = require('./controllers/adminMonitorController');
+const { protectUser } = require('./middleware/authMiddleware');
+
 // Serve local static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
-// 1. Auth routes
+// 1. Admin Auth routes
 app.post('/api/auth/login', loginLimiter, validateLogin, login);
 app.post('/api/auth/logout', logout);
 app.get('/api/auth/me', protect, getMe);
 
-// 2. Certificate public routes
+// 2. User Portal Auth & Vault routes
+app.post('/api/users/register', registerUser);
+app.post('/api/users/login', loginUser);
+app.post('/api/users/logout', logoutUser);
+app.get('/api/users/me', protectUser, getMeUser);
+app.get('/api/users/certificates', protectUser, getUserCertificates);
+app.post('/api/users/certificates', protectUser, upload.single('file'), validateCertificate, uploadUserCertificate);
+app.delete('/api/users/certificates/:id', protectUser, deleteUserCertificate);
+
+// 3. Admin Monitoring routes
+app.get('/api/admin/users-monitor', protect, getUsersAndCertificates);
+
+// 4. Certificate public routes
 app.get('/api/certificates', getCertificates);
 app.get('/api/certificates/:id', getCertificateById);
 
-// 3. Certificate protected routes
+// 5. Certificate protected admin routes
 app.post('/api/certificates', protect, upload.single('file'), validateCertificate, createCertificate);
 app.put('/api/certificates/:id', protect, upload.single('file'), (req, res, next) => {
-  // If editing text metadata only, validateCertificate passes. But if file is also optional in PUT,
-  // we do custom manual check or validate fields. Let's run validateCertificate.
-  // Wait, let's run validateCertificate, but since some fields in PUT might be optional, let's make it flexible.
-  // Actually, req.body is parsed. In express-validator, if we edit a certificate, we typically submit the entire form
-  // including existing details, so validateCertificate works perfectly.
   next();
 }, validateCertificate, updateCertificate);
 app.delete('/api/certificates/:id', protect, deleteCertificate);

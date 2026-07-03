@@ -5,21 +5,40 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const checkAuth = async () => {
     try {
-      const response = await api.get('/api/auth/me');
-      if (response.data && response.data.success) {
-        setAdmin(response.data.admin);
-      } else {
-        setAdmin(null);
+      // 1. Try checking admin session
+      const adminRes = await api.get('/api/auth/me');
+      if (adminRes.data && adminRes.data.success) {
+        setAdmin(adminRes.data.admin);
+        setUser(null);
+        setLoading(false);
+        return;
       }
-    } catch (error) {
-      setAdmin(null);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      // Not admin
     }
+
+    try {
+      // 2. Try checking standard user session
+      const userRes = await api.get('/api/users/me');
+      if (userRes.data && userRes.data.success) {
+        setUser(userRes.data.user);
+        setAdmin(null);
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      // Not user
+    }
+
+    // Reset both if checks failed
+    setAdmin(null);
+    setUser(null);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -31,30 +50,49 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post('/api/auth/login', { email, password });
       if (response.data && response.data.success) {
         setAdmin(response.data.admin);
+        setUser(null);
         return { success: true };
       }
       return { success: false, message: 'Invalid credentials' };
     } catch (error) {
-      const msg = error.response?.data?.message || 'Login failed. Please try again.';
+      const msg = error.response?.data?.message || 'Login failed.';
+      return { success: false, message: msg };
+    }
+  };
+
+  const loginUser = async (email, password) => {
+    try {
+      const response = await api.post('/api/users/login', { email, password });
+      if (response.data && response.data.success) {
+        setUser(response.data.user);
+        setAdmin(null);
+        return { success: true };
+      }
+      return { success: false, message: 'Invalid email or password' };
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Login failed.';
       return { success: false, message: msg };
     }
   };
 
   const logout = async () => {
     try {
-      await api.post('/api/auth/logout');
-      setAdmin(null);
-      return { success: true };
+      if (admin) {
+        await api.post('/api/auth/logout');
+      } else {
+        await api.post('/api/users/logout');
+      }
     } catch (error) {
       console.error('Logout error:', error);
-      // Hard clear state anyway in case of cookie issues
+    } finally {
       setAdmin(null);
-      return { success: true };
+      setUser(null);
     }
+    return { success: true };
   };
 
   return (
-    <AuthContext.Provider value={{ admin, loading, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ admin, user, loading, login, loginUser, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

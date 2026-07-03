@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Award, Shield, LogOut, Menu, X, Home, Grid } from 'lucide-react';
+import { Award, Shield, LogOut, Menu, X, Home, Grid, FolderOpen } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Navbar() {
-  const { admin, logout } = useAuth();
+  const { admin, user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -64,7 +64,8 @@ export default function Navbar() {
               <Grid className="h-4 w-4" /> Gallery
             </Link>
 
-            {admin ? (
+            {/* Admin session navigation */}
+            {admin && (
               <>
                 <Link
                   to="/admin/dashboard"
@@ -81,15 +82,52 @@ export default function Navbar() {
                   <LogOut className="h-4 w-4" /> Logout
                 </button>
               </>
-            ) : (
-              <Link
-                to="/admin/login"
-                className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                  isActive('/admin/login') ? 'text-accent' : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                <Shield className="h-4 w-4" /> Admin Login
-              </Link>
+            )}
+
+            {/* Standard user session navigation */}
+            {user && (
+              <>
+                <Link
+                  to="/dashboard"
+                  className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                    isActive('/dashboard') ? 'text-accent text-glow-purple' : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  <FolderOpen className="h-4 w-4 text-purple-400" /> My Vault
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 text-sm font-medium text-red-400 hover:text-red-300 transition-colors border border-red-500/20 hover:border-red-500/40 px-3.5 py-1.5 rounded-lg bg-red-950/10 hover:bg-red-950/20"
+                >
+                  <LogOut className="h-4 w-4" /> Logout
+                </button>
+              </>
+            )}
+
+            {/* Guest navigation */}
+            {!admin && !user && (
+              <div className="flex items-center gap-4">
+                <Link
+                  to="/login"
+                  className="text-xs font-semibold text-gray-300 hover:text-white transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-accent hover:bg-accent-dark text-white text-xs font-bold px-4 py-2 rounded-xl transition-all"
+                >
+                  Join Vault
+                </Link>
+                <span className="text-gray-700">|</span>
+                <Link
+                  to="/admin/login"
+                  className="text-xs font-semibold text-gray-500 hover:text-gray-300 transition-colors"
+                  title="Admin Access"
+                >
+                  Admin
+                </Link>
+              </div>
             )}
           </div>
 
@@ -127,7 +165,7 @@ export default function Navbar() {
             <Grid className="h-5 w-5" /> Gallery
           </Link>
 
-          {admin ? (
+          {admin && (
             <>
               <Link
                 to="/admin/dashboard"
@@ -148,16 +186,55 @@ export default function Navbar() {
                 <LogOut className="h-5 w-5" /> Logout
               </button>
             </>
-          ) : (
-            <Link
-              to="/admin/login"
-              onClick={() => setIsOpen(false)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium ${
-                isActive('/admin/login') ? 'bg-purple-950/30 text-accent' : 'text-gray-300 hover:bg-purple-950/10'
-              }`}
-            >
-              <Shield className="h-5 w-5" /> Admin Login
-            </Link>
+          )}
+
+          {user && (
+            <>
+              <Link
+                to="/dashboard"
+                onClick={() => setIsOpen(false)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium ${
+                  isActive('/dashboard') ? 'bg-purple-950/30 text-accent' : 'text-gray-300 hover:bg-purple-950/10'
+                }`}
+              >
+                <FolderOpen className="h-5 w-5 text-purple-400" /> My Vault
+              </Link>
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  handleLogout();
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-red-400 hover:bg-red-950/20"
+              >
+                <LogOut className="h-5 w-5" /> Logout
+              </button>
+            </>
+          )}
+
+          {!admin && !user && (
+            <div className="pt-4 border-t border-purple-950/20 flex flex-col gap-2 px-3">
+              <Link
+                to="/login"
+                onClick={() => setIsOpen(false)}
+                className="w-full text-center text-sm font-semibold text-gray-300 hover:text-white py-2"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setIsOpen(false)}
+                className="w-full text-center bg-accent hover:bg-accent-dark text-white text-sm font-bold py-2 rounded-xl"
+              >
+                Join Vault
+              </Link>
+              <Link
+                to="/admin/login"
+                onClick={() => setIsOpen(false)}
+                className="w-full text-center text-xs font-semibold text-gray-500 py-1"
+              >
+                Admin Area Login
+              </Link>
+            </div>
           )}
         </div>
       )}

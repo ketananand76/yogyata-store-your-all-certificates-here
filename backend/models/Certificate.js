@@ -49,6 +49,11 @@ const certificateSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    uploadedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
   },
   { timestamps: true }
 );

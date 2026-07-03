@@ -13,9 +13,14 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Certificates from './pages/Certificates';
 import CertificateDetail from './pages/CertificateDetail';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import CertificateForm from './pages/CertificateForm';
+import Login from './pages/Login'; // Admin Login
+import Dashboard from './pages/Dashboard'; // Admin Dashboard
+import CertificateForm from './pages/CertificateForm'; // Admin Form
+
+// User Portal Pages
+import Register from './pages/Register';
+import UserLogin from './pages/UserLogin';
+import UserDashboard from './pages/UserDashboard';
 
 // Initialize React Query Client
 const queryClient = new QueryClient({
@@ -89,6 +94,36 @@ export default function App() {
                 </AppLayout>
               }
             />
+            
+            {/* User Portal Auth Routes */}
+            <Route
+              path="/register"
+              element={
+                <AppLayout>
+                  <Register />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/login"
+              element={
+                <AppLayout>
+                  <UserLogin />
+                </AppLayout>
+              }
+            />
+
+            {/* User Dashboard Portal */}
+            <Route
+              path="/dashboard"
+              element={
+                <AppLayout>
+                  <UserDashboard />
+                </AppLayout>
+              }
+            />
+
+            {/* Admin Authentication Portal */}
             <Route
               path="/admin/login"
               element={
