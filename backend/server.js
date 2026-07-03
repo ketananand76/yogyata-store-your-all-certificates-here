@@ -171,6 +171,7 @@ app.set('socketio', io);
 // Sockets User Registry
 const onlineUsers = {}; // socket.id -> userId
 const userSockets = {}; // userId -> socket.id
+const pendingAdminAlerts = []; // Buffer for alerts when no admin is online
 
 // Abusive Words list (Hindi, English, etc.)
 const ABUSIVE_WORDS = [
@@ -201,6 +202,14 @@ io.on('connection', (socket) => {
   socket.on('register-admin', () => {
     socket.join('admin');
     console.log(`[Socket] Admin registered in admin room: ${socket.id}`);
+    // Flush any buffered alerts that were created before admin connected
+    if (pendingAdminAlerts.length > 0) {
+      pendingAdminAlerts.forEach(alert => {
+        socket.emit('admin-alert-created', alert);
+      });
+      console.log(`[Socket] Flushed ${pendingAdminAlerts.length} pending alert(s) to admin`);
+      pendingAdminAlerts.length = 0; // clear buffer
+    }
   });
 
   socket.on('send-message', async ({ senderId, recipientId, content, messageType, fileUrl }) => {
@@ -215,9 +224,16 @@ io.on('connection', (socket) => {
           message: 'Your account has been automatically blocked for violating our abusive language policy.' 
         });
         
-        // Notify admins of live alert
+        // Notify admins of live alert (also buffer for late-connecting admins)
         if (alert) {
-          io.to('admin').emit('admin-alert-created', alert);
+          const adminRoomSockets = io.sockets.adapter.rooms.get('admin');
+          if (adminRoomSockets && adminRoomSockets.size > 0) {
+            io.to('admin').emit('admin-alert-created', alert);
+          } else {
+            // No admin online yet — buffer the alert
+            pendingAdminAlerts.push(alert);
+            console.log(`[Alert] No admin online. Alert buffered for later delivery.`);
+          }
         }
         return; // Reject message emission
       }
@@ -256,9 +272,15 @@ io.on('connection', (socket) => {
           message: 'Your account has been automatically blocked for violating our abusive language policy.' 
         });
         
-        // Notify admins of live alert
+        // Notify admins of live alert (also buffer for late-connecting admins)
         if (alert) {
-          io.to('admin').emit('admin-alert-created', alert);
+          const adminRoomSockets = io.sockets.adapter.rooms.get('admin');
+          if (adminRoomSockets && adminRoomSockets.size > 0) {
+            io.to('admin').emit('admin-alert-created', alert);
+          } else {
+            pendingAdminAlerts.push(alert);
+            console.log(`[Alert] No admin online. Group alert buffered for later delivery.`);
+          }
         }
         return; // Reject message emission
       }
