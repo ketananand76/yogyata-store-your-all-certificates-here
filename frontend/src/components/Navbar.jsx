@@ -36,10 +36,10 @@ export default function Navbar() {
               </div>
               <div className="flex flex-col">
                 <span className="font-accent text-lg font-bold tracking-wider bg-gradient-to-r from-white via-purple-300 to-indian-gold bg-clip-text text-transparent">
-                  SANCHAY
+                  YOGYATA
                 </span>
                 <span className="text-[9px] text-purple-400/80 uppercase font-medium tracking-[0.2em] -mt-1">
-                  संजय • Portfolio
+                  योग्यता • Showcase
                 </span>
               </div>
             </Link>

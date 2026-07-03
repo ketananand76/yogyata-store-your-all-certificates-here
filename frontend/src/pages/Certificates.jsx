@@ -59,7 +59,7 @@ export default function Certificates() {
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
         <h1 className="font-accent text-3xl sm:text-4xl font-bold tracking-tight text-white">
-          Sanchay Gallery <span className="text-indian-gold font-normal">संग्रह</span>
+          Yogyata Gallery <span className="text-indian-gold font-normal">संग्रह</span>
         </h1>
         <p className="text-gray-400 text-sm sm:text-base">
           Browse, filter, and review authentic certifications issued by standard entities (NPTEL, Google, Coursera, Universities, AWS).

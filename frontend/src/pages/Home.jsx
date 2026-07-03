@@ -41,7 +41,7 @@ export default function Home() {
           </h1>
 
           <p className="text-gray-400 text-base sm:text-lg max-w-2xl leading-relaxed">
-            Namaste. I am a software engineer. This is Sanchay, a verified digital repository housing academic degrees, industry certificates, and specialized credentials. Feel free to inspect, view, or verify each document.
+            Namaste. I am a software engineer. This is Yogyata, a verified digital repository housing academic degrees, industry certificates, and specialized credentials. Feel free to inspect, view, or verify each document.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
@@ -95,7 +95,7 @@ export default function Home() {
               <div className="space-y-2 mt-6">
                 <p className="text-xs text-purple-400 font-semibold tracking-wider uppercase">Credentials Repository</p>
                 <p className="font-accent text-xl sm:text-2xl text-white font-bold tracking-wide">
-                  Sanchay Certificate Showcase
+                  Yogyata Certificate Showcase
                 </p>
                 <p className="text-xs text-gray-400">
                   Backed by secure validation endpoints and cryptographic verification urls.

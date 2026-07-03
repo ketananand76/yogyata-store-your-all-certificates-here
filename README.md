@@ -1,6 +1,6 @@
-# Sanchay (संजय) - Premium MERN Stack Certificate Showcase
+# Yogyata (योग्यता) - Premium MERN Stack Certificate Showcase
 
-Sanchay is a beautiful, secure, and responsive portfolio showcase web application designed specifically for hosting, organizing, and verifying official credentials, academic degrees, and professional certifications.
+Yogyata is a beautiful, secure, and responsive portfolio showcase web application designed specifically for hosting, organizing, and verifying official credentials, academic degrees, and professional certifications.
 
 The application features a modern dark aesthetic with a purple accent and warm gold highlights, inspired by Indian geometric designs (Mandala motifs).
 

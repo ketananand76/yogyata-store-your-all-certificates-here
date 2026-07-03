@@ -10,7 +10,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <span className="font-accent text-md font-bold tracking-wider text-purple-300">
-              SANCHAY <span className="text-indian-gold font-normal">संजय</span>
+              YOGYATA <span className="text-indian-gold font-normal">योग्यता</span>
             </span>
             <span className="text-xs text-gray-500 mt-1 max-w-sm">
               An elegant, tamper-resistant digital gallery and verifier for official achievements and certificates.
@@ -28,7 +28,7 @@ export default function Footer() {
           </div>
 
           <div className="text-xs text-gray-500 flex flex-col items-center md:items-end">
-            <p>&copy; {new Date().getFullYear()} Sanchay. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Yogyata. All rights reserved.</p>
             <p className="mt-1 flex items-center gap-1.5">
               <span>Made with Pride in India</span>
               <span className="inline-block w-2.5 h-[5px] bg-indian-saffron"></span>
