@@ -184,6 +184,7 @@ io.on('connection', (socket) => {
 
   // Video/Audio signaling
   socket.on('call-user', ({ callerId, recipientId, signalData, type, callerName }) => {
+    console.log(`[Calling] call-user: from ${callerId} (${callerName}) to recipient ${recipientId} (${type})`);
     io.to(String(recipientId)).emit('incoming-call', {
       callerId,
       callerName,
@@ -193,6 +194,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('answer-call', ({ callerId, recipientId, signalData }) => {
+    console.log(`[Calling] answer-call: from ${recipientId} to caller ${callerId}`);
     io.to(String(callerId)).emit('call-accepted', {
       recipientId,
       signalData,
@@ -200,6 +202,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('ice-candidate', ({ targetId, candidate, senderId }) => {
+    console.log(`[Calling] ice-candidate: from ${senderId} to target ${targetId}`);
     io.to(String(targetId)).emit('ice-candidate', {
       candidate,
       senderId,
@@ -207,6 +210,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('end-call', ({ targetId, senderId }) => {
+    console.log(`[Calling] end-call: from ${senderId} to target ${targetId}`);
     io.to(String(targetId)).emit('call-ended', { senderId });
   });
 

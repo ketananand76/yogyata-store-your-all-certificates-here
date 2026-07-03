@@ -22,6 +22,12 @@ export default function Chat() {
   const [callInfo, setCallInfo] = useState(null); // { callerId, callerName, recipientId, type, signalData, direction: 'inbound'|'outbound' }
 
   const chatBottomRef = useRef(null);
+  const selectedUserRef = useRef(null);
+
+  // Sync ref with selected user to avoid stale closures in socket listener
+  useEffect(() => {
+    selectedUserRef.current = selectedUser;
+  }, [selectedUser]);
 
   // Fetch contact list
   const { data: contactsData, isLoading: loadingContacts } = useQuery({
@@ -85,9 +91,10 @@ export default function Chat() {
 
     newSocket.on('receive-message', (msg) => {
       const senderId = String(msg.sender?._id || msg.sender);
+      const activePartner = selectedUserRef.current;
       
       // If message is from the active chat partner, append to list
-      if (selectedUser && String(selectedUser._id) === senderId) {
+      if (activePartner && String(activePartner._id) === senderId) {
         setMessages((prev) => [...prev, msg]);
         // Immediately mark as read on backend too
         api.put(`/api/messages/${senderId}/read`).catch(() => {});
@@ -103,7 +110,7 @@ export default function Chat() {
           toast(`New message from contact`, { icon: '💬' });
         } else {
           // If we sent a message from another tab, append it
-          if (selectedUser && String(selectedUser._id) === String(msg.recipient?._id || msg.recipient)) {
+          if (activePartner && String(activePartner._id) === String(msg.recipient?._id || msg.recipient)) {
             setMessages((prev) => [...prev, msg]);
           }
         }
@@ -126,7 +133,7 @@ export default function Chat() {
     return () => {
       newSocket.disconnect();
     };
-  }, [currentUser, selectedUser]);
+  }, [currentUser]);
 
   // Fetch message history when active chat partner changes
   useEffect(() => {
