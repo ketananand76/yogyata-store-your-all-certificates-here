@@ -6,7 +6,7 @@ const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudina
 // GET /api/certificates
 const getCertificates = async (req, res, next) => {
   try {
-    const { category, search, featured, sortBy, page = 1, limit = 12 } = req.query;
+    const { category, search, featured, sortBy, status, page = 1, limit = 12 } = req.query;
 
     const jwt = require('jsonwebtoken');
     const Admin = require('../models/Admin');
@@ -60,6 +60,10 @@ const getCertificates = async (req, res, next) => {
 
     if (featured !== undefined) {
       query.featured = featured === 'true';
+    }
+
+    if (status) {
+      query.status = status;
     }
 
     if (search) {

@@ -39,6 +39,47 @@ export default function Dashboard() {
     enabled: activeTab === 'users',
   });
 
+  // Query: pending certificates
+  const { data: pendingData, isLoading: loadingPending, error: pendingError } = useQuery({
+    queryKey: ['pendingCertificates'],
+    queryFn: async () => {
+      const res = await api.get('/api/certificates', { params: { status: 'pending', limit: 100 } });
+      return res.data;
+    },
+  });
+
+  // Mutation: Approve certificate
+  const approveMutation = useMutation({
+    mutationFn: async (id) => {
+      const res = await api.put(`/api/admin/certificates/${id}/approve`);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Certificate approved successfully!');
+      queryClient.invalidateQueries({ queryKey: ['pendingCertificates'] });
+      queryClient.invalidateQueries({ queryKey: ['adminCertificates'] });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Approval failed');
+    },
+  });
+
+  // Mutation: Reject certificate
+  const rejectMutation = useMutation({
+    mutationFn: async (id) => {
+      const res = await api.put(`/api/admin/certificates/${id}/reject`);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Certificate rejected successfully');
+      queryClient.invalidateQueries({ queryKey: ['pendingCertificates'] });
+      queryClient.invalidateQueries({ queryKey: ['adminCertificates'] });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Rejection failed');
+    },
+  });
+
   // Toggle Pinned Spotlight Status Mutation
   const toggleFeaturedMutation = useMutation({
     mutationFn: async ({ id, featured }) => {
@@ -126,7 +167,7 @@ export default function Dashboard() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex border-b border-purple-950/40 mb-6 max-w-xs">
+      <div className="flex border-b border-purple-950/40 mb-6 max-w-md">
         <button
           onClick={() => setActiveTab('certificates')}
           className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
@@ -136,6 +177,16 @@ export default function Dashboard() {
           }`}
         >
           Inventory
+        </button>
+        <button
+          onClick={() => setActiveTab('approvals')}
+          className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
+            activeTab === 'approvals'
+              ? 'border-accent text-accent'
+              : 'border-transparent text-gray-500 hover:text-gray-300'
+          }`}
+        >
+          Approvals ({pendingData?.certificates?.length || 0})
         </button>
         <button
           onClick={() => setActiveTab('users')}
@@ -308,6 +359,103 @@ export default function Dashboard() {
             </div>
           )}
         </>
+      )}
+
+      {/* Approvals tab panel */}
+      {activeTab === 'approvals' && (
+        <div className="space-y-6">
+          {loadingPending ? (
+            <div className="glass-panel rounded-2xl p-16 flex items-center justify-center border-purple-950/40">
+              <Loader2 className="h-8 w-8 animate-spin text-accent" />
+            </div>
+          ) : pendingError ? (
+            <div className="glass-panel rounded-2xl p-12 text-center text-red-400 border-red-950/50">
+              Failed to load pending certificates.
+            </div>
+          ) : pendingData?.certificates?.length === 0 ? (
+            <div className="glass-panel rounded-2xl p-16 text-center text-gray-500 border-purple-950/20">
+              No pending certificates requiring approval.
+            </div>
+          ) : (
+            <div className="glass-panel rounded-2xl overflow-hidden border-purple-950/40 shadow-xl bg-[#0c0a13]/70">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-purple-950/20 border-b border-purple-950/50 text-gray-400 uppercase text-[10px] font-bold tracking-widest">
+                      <th className="px-6 py-4">Title & Issuer</th>
+                      <th className="px-6 py-4">Uploaded By</th>
+                      <th className="px-6 py-4">Category</th>
+                      <th className="px-6 py-4 text-center">Verify Link</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-purple-950/30 text-sm text-gray-300">
+                    {pendingData.certificates.map((cert) => (
+                      <tr key={cert._id} className="hover:bg-[#12111d]/40 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-white">{cert.title}</div>
+                          <div className="text-xs text-gray-500">{cert.issuer}</div>
+                        </td>
+                        <td className="px-6 py-4 font-semibold text-purple-400">
+                          {cert.uploadedBy ? (
+                            <Link to={`/profile/${cert.uploadedBy._id}`} className="hover:underline">
+                              {cert.uploadedBy.name || 'Developer'}
+                            </Link>
+                          ) : (
+                            'Admin'
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="bg-purple-950/35 border border-purple-900/60 text-purple-300 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+                            {cert.category}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {cert.verifyUrl ? (
+                            <a
+                              href={cert.verifyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-indian-gold hover:underline"
+                            >
+                              Link <ExternalLink className="h-3 w-3" />
+                            </a>
+                          ) : (
+                            <span className="text-xs text-gray-600">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right space-x-2">
+                          <a
+                            href={cert.fileUrl.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || ''}${cert.fileUrl}` : cert.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center text-xs font-semibold bg-purple-950/30 hover:bg-purple-900/40 text-purple-300 border border-purple-900/40 px-3 py-1.5 rounded-lg transition-colors mr-2"
+                          >
+                            View
+                          </a>
+                          <button
+                            onClick={() => approveMutation.mutate(cert._id)}
+                            disabled={approveMutation.isLoading}
+                            className="inline-flex items-center justify-center text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => rejectMutation.mutate(cert._id)}
+                            disabled={rejectMutation.isLoading}
+                            className="inline-flex items-center justify-center text-xs font-bold bg-red-650 hover:bg-red-750 text-white px-4 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            Reject
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Users Monitor tab panel */}
