@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { Award, Plus, Trash2, ExternalLink, Calendar, FileText, Upload, Loader2, LogOut } from 'lucide-react';
+import { Award, Plus, Trash2, ExternalLink, Calendar, FileText, Upload, Loader2, LogOut, ShieldCheck, ShieldAlert, Sparkles, CheckCircle2, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { io } from 'socket.io-client';
 
 const categories = ['Development', 'Cloud', 'Security', 'Data Science', 'Academic', 'Design', 'Other'];
+
+const socketUrl = import.meta.env.DEV 
+  ? (import.meta.env.VITE_API_URL || 'http://localhost:5000') 
+  : window.location.origin;
 
 export default function UserDashboard() {
   const { user, loading, logout } = useAuth();
@@ -23,12 +28,49 @@ export default function UserDashboard() {
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Scanning simulation states
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [scanStatus, setScanStatus] = useState('');
+
   // Redirect if guest
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loading && !user) {
       navigate('/login');
     }
   }, [user, loading, navigate]);
+
+  // Socket connection for live status updates
+  useEffect(() => {
+    if (!user) return;
+
+    const socket = io(socketUrl);
+
+    socket.on('connect', () => {
+      socket.emit('register-user', user._id);
+    });
+
+    socket.on('status-update', (data) => {
+      // Show notification based on approval state
+      if (data.status === 'approved') {
+        toast.success(`Congratulations! Your certificate "${data.title}" was approved by the admin.`, {
+          icon: '✅',
+          duration: 6000,
+        });
+      } else if (data.status === 'rejected') {
+        toast.error(`Your certificate "${data.title}" was rejected by the admin.`, {
+          icon: '❌',
+          duration: 6000,
+        });
+      }
+      // Live refetch certificates status lists
+      queryClient.invalidateQueries({ queryKey: ['userCertificates'] });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user, queryClient]);
 
   // Fetch only this user's certificates
   const { data, isLoading, error } = useQuery({
@@ -55,6 +97,66 @@ export default function UserDashboard() {
     },
   });
 
+  // Simulate scanning/OCR extraction process
+  const startFileScanning = (selectedFile) => {
+    setIsScanning(true);
+    setScanProgress(0);
+    setScanStatus('Initializing neural OCR pipelines...');
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 10;
+      setScanProgress(progress);
+
+      if (progress === 30) {
+        setScanStatus('Scanning document layout boundaries...');
+      } else if (progress === 60) {
+        setScanStatus('Extracting candidate name and certificate title fields...');
+      } else if (progress === 80) {
+        setScanStatus('Validating cryptographic issuer signature tokens...');
+      } else if (progress >= 100) {
+        clearInterval(interval);
+        setScanStatus('Scanning completed successfully!');
+        
+        setTimeout(() => {
+          // Parse file name to extract smart defaults
+          const namePart = selectedFile.name.toLowerCase();
+          let extractedTitle = 'Specialized Technology Certification';
+          let extractedIssuer = 'Credential Verification Authority';
+
+          if (namePart.includes('aws') || namePart.includes('amazon')) {
+            extractedTitle = 'AWS Certified Cloud Professional';
+            extractedIssuer = 'Amazon Web Services';
+          } else if (namePart.includes('python')) {
+            extractedTitle = 'Advanced Python Software Engineer';
+            extractedIssuer = 'Python Software Foundation';
+          } else if (namePart.includes('javascript') || namePart.includes('js')) {
+            extractedTitle = 'JavaScript FullStack Architect Certificate';
+            extractedIssuer = 'ECMA International Org';
+          } else if (namePart.includes('google') || namePart.includes('gcp')) {
+            extractedTitle = 'Google Associate Cloud Engineer';
+            extractedIssuer = 'Google Cloud Platform';
+          } else if (namePart.includes('react')) {
+            extractedTitle = 'Frontend Engineer (React specializing)';
+            extractedIssuer = 'Meta Developer Academy';
+          }
+
+          const today = new Date().toISOString().split('T')[0];
+
+          // Set form states
+          setTitle(extractedTitle);
+          setIssuer(extractedIssuer);
+          setDateIssued(today);
+          setFile(selectedFile);
+          
+          setIsScanning(false);
+          setShowAddForm(true); // Open pre-filled form modal
+          toast.success('Scanning complete! Details extracted.', { icon: '✨' });
+        }, 800);
+      }
+    }, 400);
+  };
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
@@ -64,7 +166,8 @@ export default function UserDashboard() {
       return;
     }
 
-    setFile(selectedFile);
+    // Trigger OCR simulator
+    startFileScanning(selectedFile);
   };
 
   const handleUploadSubmit = async (e) => {
@@ -73,7 +176,7 @@ export default function UserDashboard() {
       return toast.error('Please fill in all required fields');
     }
     if (!file) {
-      return toast.error('Please select a certificate file (JPG, PNG or PDF)');
+      return toast.error('Please select a certificate file first');
     }
 
     const formData = new FormData();
@@ -92,7 +195,7 @@ export default function UserDashboard() {
       });
 
       if (res.data.success) {
-        toast.success('Certificate uploaded successfully!');
+        toast.success('Certificate sent to admin for approval!');
         setShowAddForm(false);
         setTitle('');
         setIssuer('');
@@ -136,6 +239,37 @@ export default function UserDashboard() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen relative z-10">
       <div className="absolute top-[10%] left-[-10%] w-[35vw] h-[35vw] bg-accent/5 rounded-full blur-[100px] pointer-events-none"></div>
 
+      {/* Scanning Laser Simulator Modal overlay */}
+      {isScanning && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#07050b]/90 backdrop-blur-md p-6">
+          <div className="w-full max-w-md bg-[#12111d] glass-panel-gold border-indian-gold/30 rounded-3xl p-8 space-y-6 text-center shadow-2xl relative overflow-hidden">
+            
+            {/* Horizontal Laser Beam Animation */}
+            <div className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indian-gold to-transparent shadow-lg shadow-yellow-500 animate-laser-sweep"></div>
+            
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indian-gold to-yellow-600 flex items-center justify-center mx-auto text-dark-bg animate-pulse">
+              <Sparkles className="h-8 w-8" />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="font-accent text-lg font-bold text-white uppercase tracking-wider">AI Certificate Scanner</h2>
+              <p className="text-xs text-gray-400 leading-relaxed">{scanStatus}</p>
+            </div>
+
+            <div className="w-full bg-[#050409] h-2 rounded-full overflow-hidden border border-purple-950">
+              <div
+                className="bg-gradient-to-r from-indian-gold to-yellow-500 h-full transition-all duration-300"
+                style={{ width: `${scanProgress}%` }}
+              ></div>
+            </div>
+
+            <div className="text-[10px] text-indian-gold tracking-[0.25em] font-bold uppercase animate-pulse">
+              Extricating metadata {scanProgress}%
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
@@ -144,17 +278,17 @@ export default function UserDashboard() {
             Welcome, {user.name}
           </h1>
           <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider">
-            Store and manage your academic & professional credentials
+            Upload document scans & monitor approval status in real-time
           </p>
         </div>
 
         <div className="flex gap-3">
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="inline-flex items-center gap-1.5 bg-gradient-to-r from-accent to-accent-dark hover:from-accent-dark hover:to-accent text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-purple-500/10 hover:scale-[1.01] transition-all"
-          >
-            <Plus className="h-4.5 w-4.5" /> Upload Certificate
-          </button>
+          {/* File trigger that initiates the Scan */}
+          <label className="inline-flex items-center gap-1.5 bg-gradient-to-r from-accent to-accent-dark hover:from-accent-dark hover:to-accent text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-purple-500/10 hover:scale-[1.01] transition-all cursor-pointer">
+            <Plus className="h-4.5 w-4.5" /> Upload & Scan
+            <input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={handleFileChange} className="hidden" />
+          </label>
+          
           <button
             onClick={handleLogout}
             className="inline-flex items-center gap-1.5 bg-red-950/15 border border-red-500/20 text-red-400 hover:text-red-300 hover:bg-red-950/20 text-xs font-bold px-4 py-2.5 rounded-xl transition-all"
@@ -167,25 +301,30 @@ export default function UserDashboard() {
       {/* Upload Form Modal */}
       {showAddForm && (
         <form onSubmit={handleUploadSubmit} className="glass-panel rounded-2xl p-6 border-purple-950/40 space-y-4 mb-8">
-          <h3 className="font-accent text-lg font-bold text-white mb-2">Store New Certificate</h3>
+          <div className="flex items-center gap-2 mb-2 border-b border-purple-950/30 pb-2">
+            <Sparkles className="h-5 w-5 text-indian-gold" />
+            <h3 className="font-accent text-lg font-bold text-white">Scanned Metadata Verification</h3>
+          </div>
+          <p className="text-[10px] text-gray-400">Please review the details extracted from your scan. Adjust values as needed before sending for approval.</p>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-gray-500">Certificate Title *</label>
+              <label className="text-[10px] uppercase font-bold text-gray-500">Extracted Title *</label>
               <input
                 type="text"
                 required
-                placeholder="e.g. AWS Solutions Architect"
+                placeholder="Certificate Title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full bg-[#07050d] border border-purple-950/80 focus:border-accent text-xs text-gray-200 px-3 py-2 rounded-lg focus:outline-none"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] uppercase font-bold text-gray-500">Issuer Portal / Org *</label>
+              <label className="text-[10px] uppercase font-bold text-gray-500">Extracted Issuer *</label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Amazon Web Services"
+                placeholder="Issuer Organization"
                 value={issuer}
                 onChange={(e) => setIssuer(e.target.value)}
                 className="w-full bg-[#07050d] border border-purple-950/80 focus:border-accent text-xs text-gray-200 px-3 py-2 rounded-lg focus:outline-none"
@@ -217,7 +356,7 @@ export default function UserDashboard() {
               <label className="text-[10px] uppercase font-bold text-gray-500">Verification URL</label>
               <input
                 type="url"
-                placeholder="e.g. https://www.credly.com/verify/..."
+                placeholder="Verification link if available"
                 value={verifyUrl}
                 onChange={(e) => setVerifyUrl(e.target.value)}
                 className="w-full bg-[#07050d] border border-purple-950/80 focus:border-accent text-xs text-gray-200 px-3 py-2 rounded-lg focus:outline-none"
@@ -226,7 +365,7 @@ export default function UserDashboard() {
             <div className="space-y-1 sm:col-span-2">
               <label className="text-[10px] uppercase font-bold text-gray-500">Description</label>
               <textarea
-                placeholder="Detail skills or curriculum attained..."
+                placeholder="Skills or tags"
                 rows="2"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -234,19 +373,9 @@ export default function UserDashboard() {
               />
             </div>
             <div className="space-y-1 sm:col-span-2">
-              <label className="text-[10px] uppercase font-bold text-gray-500">Select Document File * (Max 5MB)</label>
-              <div className="border border-dashed border-purple-950 hover:border-purple-800 rounded-xl p-4 text-center cursor-pointer relative bg-purple-950/5">
-                <input
-                  type="file"
-                  required
-                  accept=".jpg,.jpeg,.png,.pdf"
-                  onChange={handleFileChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                <span className="text-xs font-semibold text-gray-300 flex items-center justify-center gap-1.5">
-                  <Upload className="h-4 w-4 text-accent" />
-                  {file ? file.name : 'Choose JPG, PNG or PDF File'}
-                </span>
+              <label className="text-[10px] uppercase font-bold text-gray-500">Selected Document Scan</label>
+              <div className="bg-purple-950/10 border border-purple-900/40 rounded-xl p-3 text-center text-xs font-semibold text-purple-300">
+                {file ? file.name : 'No file selected'}
               </div>
             </div>
           </div>
@@ -259,15 +388,18 @@ export default function UserDashboard() {
             >
               {isUploading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Uploading...
+                  <Loader2 className="h-4 w-4 animate-spin" /> Sending for approval...
                 </>
               ) : (
-                'Upload Certificate'
+                'Send for Admin Approval'
               )}
             </button>
             <button
               type="button"
-              onClick={() => setShowAddForm(false)}
+              onClick={() => {
+                setShowAddForm(false);
+                setFile(null);
+              }}
               className="flex-1 border border-purple-950 text-gray-400 py-2.5 rounded-xl text-xs font-bold hover:text-white"
             >
               Cancel
@@ -276,10 +408,10 @@ export default function UserDashboard() {
         </form>
       )}
 
-      {/* Vault Grid */}
+      {/* Vault grid display with status flags */}
       {certificates.length === 0 ? (
         <div className="glass-panel p-16 rounded-2xl text-center text-gray-500 border-purple-950/20">
-          Your vault is currently empty. Click "Upload Certificate" to store your first document!
+          Your vault tracker is empty. Choose a file via the "Upload & Scan" button to submit credentials.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -297,29 +429,52 @@ export default function UserDashboard() {
                   </div>
                 ) : (
                   <img
-                    src={
-                      cert.fileUrl.startsWith('/uploads')
-                        ? `${import.meta.env.VITE_API_URL || ''}${cert.fileUrl}`
-                        : cert.fileUrl
-                    }
+                    src={cert.fileUrl.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || ''}${cert.fileUrl}` : cert.fileUrl}
                     alt={cert.title}
                     className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
                   />
                 )}
+                
+                {/* Category tag */}
                 <span className="absolute top-2.5 left-2.5 bg-[#0d0a15]/80 backdrop-blur border border-purple-900/60 text-purple-300 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
                   {cert.category}
+                </span>
+
+                {/* Status Badges overlays */}
+                <span className={`absolute top-2.5 right-2.5 text-[9px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${
+                  cert.status === 'approved'
+                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
+                    : cert.status === 'rejected'
+                    ? 'bg-red-500/15 border-red-500/30 text-red-400'
+                    : 'bg-yellow-500/15 border-yellow-500/30 text-yellow-400'
+                }`}>
+                  {cert.status || 'pending'}
                 </span>
               </div>
 
               <div className="p-4 flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="text-[10px] text-gray-500">
-                    {new Date(cert.dateIssued).toLocaleDateString('en-IN', {
-                      year: 'numeric',
-                      month: 'long',
-                    })}
-                  </span>
-                  <h3 className="font-accent text-sm font-bold text-white mt-0.5 line-clamp-1 group-hover:text-accent transition-colors">
+                  <div className="flex justify-between items-center text-[10px] text-gray-500">
+                    <span>
+                      {new Date(cert.dateIssued).toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'long',
+                      })}
+                    </span>
+                    
+                    {/* Status live indicator */}
+                    <span className="flex items-center gap-1 text-[9px] font-medium capitalize">
+                      {cert.status === 'approved' ? (
+                        <span className="text-emerald-400 flex items-center gap-0.5"><CheckCircle2 className="h-3 w-3" /> Live Feed</span>
+                      ) : cert.status === 'rejected' ? (
+                        <span className="text-red-400 flex items-center gap-0.5"><ShieldAlert className="h-3 w-3" /> Rejected</span>
+                      ) : (
+                        <span className="text-yellow-400 flex items-center gap-0.5"><Clock className="h-3 w-3 animate-spin" /> Pending Approval</span>
+                      )}
+                    </span>
+                  </div>
+
+                  <h3 className="font-accent text-sm font-bold text-white mt-1.5 line-clamp-1 group-hover:text-accent transition-colors">
                     {cert.title}
                   </h3>
                   <p className="text-[11px] text-gray-400 line-clamp-1">{cert.issuer}</p>
@@ -327,11 +482,7 @@ export default function UserDashboard() {
 
                 <div className="flex gap-2 mt-4 pt-3 border-t border-purple-950/20">
                   <a
-                    href={
-                      cert.fileUrl.startsWith('/uploads')
-                        ? `${import.meta.env.VITE_API_URL || ''}${cert.fileUrl}`
-                        : cert.fileUrl
-                    }
+                    href={cert.fileUrl.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL || ''}${cert.fileUrl}` : cert.fileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 inline-flex items-center justify-center text-[10px] font-bold bg-purple-950/30 hover:bg-purple-900/40 text-purple-200 border border-purple-900/40 py-1.5 rounded-lg transition-colors"

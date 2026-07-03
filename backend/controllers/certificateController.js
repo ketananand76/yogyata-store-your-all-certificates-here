@@ -37,22 +37,19 @@ const getCertificates = async (req, res, next) => {
         const userDoc = await User.findById(currentUser);
         const followingIds = userDoc ? userDoc.following : [];
         
-        // Logged-in standard user sees public admin certs OR their own certs OR followed users' certs
+        // Logged-in standard user sees approved admin certs OR their own certs (any status) OR approved followed users' certs
         conditions.push({
           $or: [
-            { uploadedBy: null },
-            { uploadedBy: { $exists: false } },
+            { uploadedBy: null, status: 'approved' },
+            { uploadedBy: { $exists: false }, status: 'approved' },
             { uploadedBy: currentUser },
-            { uploadedBy: { $in: followingIds } }
+            { uploadedBy: { $in: followingIds }, status: 'approved' }
           ]
         });
       } else {
-        // Guests see only public admin certs
+        // Guests see only approved certificates
         conditions.push({
-          $or: [
-            { uploadedBy: null },
-            { uploadedBy: { $exists: false } }
-          ]
+          status: 'approved'
         });
       }
     }
@@ -199,6 +196,7 @@ const createCertificate = async (req, res, next) => {
       fileType,
       featured: featured === 'true' || featured === true,
       order: order ? Number(order) : 0,
+      status: 'approved',
     });
 
     res.status(201).json({

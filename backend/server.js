@@ -79,7 +79,7 @@ const {
   getUserProfile,
 } = require('./controllers/socialController');
 const { getChatMessages } = require('./controllers/messageController');
-const { getUsersAndCertificates } = require('./controllers/adminMonitorController');
+const { getUsersAndCertificates, approveCertificate, rejectCertificate } = require('./controllers/adminMonitorController');
 const { protectUser } = require('./middleware/authMiddleware');
 
 // Serve local static files
@@ -116,6 +116,8 @@ app.get('/api/messages/:userId', protectUser, getChatMessages);
 
 // 5. Admin Monitoring routes
 app.get('/api/admin/users-monitor', protect, getUsersAndCertificates);
+app.put('/api/admin/certificates/:id/approve', protect, approveCertificate);
+app.put('/api/admin/certificates/:id/reject', protect, rejectCertificate);
 
 // 6. Certificate public routes
 app.get('/api/certificates', getCertificates);
@@ -144,6 +146,8 @@ const io = new Server(server, {
   },
 });
 
+app.set('socketio', io);
+
 // Sockets User Registry
 const onlineUsers = {}; // socket.id -> userId
 const userSockets = {}; // userId -> socket.id
@@ -155,6 +159,7 @@ io.on('connection', (socket) => {
     if (userId) {
       onlineUsers[socket.id] = userId;
       userSockets[userId] = socket.id;
+      socket.join(String(userId)); // Join standard user room
       io.emit('online-users', Object.values(onlineUsers));
     }
   });
