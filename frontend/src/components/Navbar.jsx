@@ -123,8 +123,8 @@ export default function Navbar() {
       {/* ========================================== */}
       {/* 💻 TOP NAVBAR: DESKTOP LAYOUT              */}
       {/* ========================================== */}
-      <nav className="sticky top-0 z-50 bg-[#0c0a14]/90 backdrop-blur-md border-b border-purple-950/40">
-        <div className="h-[3px] w-full bg-gradient-to-r from-indian-saffron via-white to-indian-emerald"></div>
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div className="h-[3px] w-full bg-gradient-to-r from-indian-saffron via-slate-200 to-indian-emerald"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -136,10 +136,10 @@ export default function Navbar() {
                   <Award className="h-6 w-6 text-white" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-accent text-lg font-bold tracking-wider bg-gradient-to-r from-white via-purple-300 to-indian-gold bg-clip-text text-transparent">
+                  <span className="font-accent text-lg font-bold tracking-wider text-slate-800">
                     YOGYATA
                   </span>
-                  <span className="text-[9px] text-purple-400/80 uppercase font-medium tracking-[0.2em] -mt-1">
+                  <span className="text-[9px] text-purple-600/80 uppercase font-semibold tracking-[0.2em] -mt-1">
                     योग्यता • Showcase
                   </span>
                 </div>
@@ -151,7 +151,7 @@ export default function Navbar() {
               <Link
                 to="/"
                 className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                  isActive('/') ? 'text-accent text-glow-purple' : 'text-gray-300 hover:text-white'
+                  isActive('/') ? 'text-accent' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Home className="h-4 w-4" /> Home
@@ -163,14 +163,14 @@ export default function Navbar() {
                   <Link
                     to="/admin/dashboard"
                     className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                      isActive('/admin/dashboard') ? 'text-accent text-glow-purple' : 'text-gray-300 hover:text-white'
+                      isActive('/admin/dashboard') ? 'text-accent' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     <Shield className="h-4 w-4 text-indian-gold" /> Admin Panel
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-1.5 text-sm font-medium text-red-400 hover:text-red-300 transition-colors border border-red-500/20 hover:border-red-500/40 px-3.5 py-1.5 rounded-lg bg-red-950/10 hover:bg-red-950/20"
+                    className="flex items-center gap-1.5 text-sm font-medium text-red-600 hover:text-red-750 transition-colors border border-red-200 hover:border-red-300 px-3.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100"
                   >
                     <LogOut className="h-4 w-4" /> Logout
                   </button>
@@ -184,30 +184,30 @@ export default function Navbar() {
                   <Link
                     to="/search"
                     className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                      isActive('/search') ? 'text-accent text-glow-purple' : 'text-gray-300 hover:text-white'
+                      isActive('/search') ? 'text-accent' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    <Search className="h-4 w-4 text-purple-400" /> Search
+                    <Search className="h-4 w-4 text-purple-600" /> Search
                   </Link>
 
                   {/* Jobs Link */}
                   <Link
                     to="/jobs"
                     className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                      isActive('/jobs') ? 'text-accent text-glow-purple' : 'text-gray-300 hover:text-white'
+                      isActive('/jobs') ? 'text-accent' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    <Briefcase className="h-4 w-4 text-purple-400" /> Jobs
+                    <Briefcase className="h-4 w-4 text-purple-600" /> Jobs
                   </Link>
 
                   {/* Chat Link with Badges */}
                   <Link
                     to="/chat"
                     className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative ${
-                      isActive('/chat') ? 'text-accent text-glow-purple' : 'text-gray-300 hover:text-white'
+                      isActive('/chat') ? 'text-accent' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    <MessageSquare className="h-4 w-4 text-purple-400" /> Chat
+                    <MessageSquare className="h-4 w-4 text-purple-600" /> Chat
                     {unreadChatTotal > 0 && (
                       <span className="absolute -top-1.5 -right-2 bg-accent text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
                         {unreadChatTotal}
@@ -219,10 +219,10 @@ export default function Navbar() {
                   <Link
                     to="/notifications"
                     className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative ${
-                      isActive('/notifications') ? 'text-accent text-glow-purple' : 'text-gray-300 hover:text-white'
+                      isActive('/notifications') ? 'text-accent' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    <Bell className="h-4 w-4 text-purple-400" /> Notifications
+                    <Bell className="h-4 w-4 text-purple-600" /> Notifications
                     {unreadNotifCount > 0 && (
                       <span className="absolute -top-1.5 -right-2 bg-red-650 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
                         {unreadNotifCount}
@@ -234,25 +234,25 @@ export default function Navbar() {
                   <Link
                     to="/dashboard"
                     className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                      isActive('/dashboard') ? 'text-accent text-glow-purple' : 'text-gray-300 hover:text-white'
+                      isActive('/dashboard') ? 'text-accent' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    <FolderOpen className="h-4 w-4 text-purple-400" /> Vault
+                    <FolderOpen className="h-4 w-4 text-purple-600" /> Vault
                   </Link>
 
                   {/* Profile Link */}
                   <Link
                     to={`/profile/${user._id}`}
                     className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                      isActive(`/profile/${user._id}`) ? 'text-accent text-glow-purple' : 'text-gray-300 hover:text-white'
+                      isActive(`/profile/${user._id}`) ? 'text-accent' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    <User className="h-4 w-4 text-purple-400" /> Profile
+                    <User className="h-4 w-4 text-purple-600" /> Profile
                   </Link>
 
                   <button
                     onClick={handleLogout}
-                    className="flex items-center gap-1.5 text-sm font-medium text-red-400 hover:text-red-300 transition-colors border border-red-500/20 hover:border-red-500/40 px-3.5 py-1.5 rounded-lg bg-red-950/10 hover:bg-red-950/20"
+                    className="flex items-center gap-1.5 text-sm font-medium text-red-600 hover:text-red-750 transition-colors border border-red-200 hover:border-red-300 px-3.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100"
                   >
                     <LogOut className="h-4 w-4" /> Logout
                   </button>
@@ -264,20 +264,20 @@ export default function Navbar() {
                 <div className="flex items-center gap-4">
                   <Link
                     to="/login"
-                    className="text-xs font-semibold text-gray-300 hover:text-white transition-colors"
+                    className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
-                    className="bg-accent hover:bg-accent-dark text-white text-xs font-bold px-4 py-2 rounded-xl transition-all"
+                    className="bg-accent hover:bg-accent-dark text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md shadow-purple-500/10"
                   >
                     Join Vault
                   </Link>
-                  <span className="text-gray-700">|</span>
+                  <span className="text-slate-350">|</span>
                   <Link
                     to="/admin/login"
-                    className="text-xs font-semibold text-gray-500 hover:text-gray-300 transition-colors"
+                    className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors"
                     title="Admin Access"
                   >
                     Admin
@@ -294,12 +294,12 @@ export default function Navbar() {
       {/* 📱 MOBILE BOTTOM DOCK BAR: PORTABLE NAV     */}
       {/* ========================================== */}
       {user && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-[150] bg-[#0c0a14]/95 border-t border-purple-950/50 backdrop-blur-md px-4 py-2.5 flex items-center justify-around shadow-2xl">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-[150] bg-white border-t border-slate-200 px-4 py-2.5 flex items-center justify-around shadow-2xl">
           {/* 1. Home */}
           <Link
             to="/"
             className={`flex flex-col items-center gap-0.5 text-[10px] font-bold ${
-              isActive('/') ? 'text-accent' : 'text-gray-500'
+              isActive('/') ? 'text-accent' : 'text-slate-400'
             }`}
           >
             <Home className="h-5 w-5" />
@@ -310,7 +310,7 @@ export default function Navbar() {
           <Link
             to="/search"
             className={`flex flex-col items-center gap-0.5 text-[10px] font-bold ${
-              isActive('/search') ? 'text-accent' : 'text-gray-500'
+              isActive('/search') ? 'text-accent' : 'text-slate-400'
             }`}
           >
             <Search className="h-5 w-5" />
@@ -321,7 +321,7 @@ export default function Navbar() {
           <Link
             to="/chat"
             className={`flex flex-col items-center gap-0.5 text-[10px] font-bold relative ${
-              isActive('/chat') ? 'text-accent' : 'text-gray-500'
+              isActive('/chat') ? 'text-accent' : 'text-slate-400'
             }`}
           >
             <MessageSquare className="h-5 w-5" />
@@ -337,7 +337,7 @@ export default function Navbar() {
           <Link
             to="/jobs"
             className={`flex flex-col items-center gap-0.5 text-[10px] font-bold ${
-              isActive('/jobs') ? 'text-accent' : 'text-gray-500'
+              isActive('/jobs') ? 'text-accent' : 'text-slate-400'
             }`}
           >
             <Briefcase className="h-5 w-5" />
@@ -348,7 +348,7 @@ export default function Navbar() {
           <Link
             to="/notifications"
             className={`flex flex-col items-center gap-0.5 text-[10px] font-bold relative ${
-              isActive('/notifications') ? 'text-accent' : 'text-gray-500'
+              isActive('/notifications') ? 'text-accent' : 'text-slate-400'
             }`}
           >
             <Bell className="h-5 w-5" />
@@ -364,7 +364,7 @@ export default function Navbar() {
           <Link
             to="/dashboard"
             className={`flex flex-col items-center gap-0.5 text-[10px] font-bold ${
-              isActive('/dashboard') ? 'text-accent' : 'text-gray-500'
+              isActive('/dashboard') ? 'text-accent' : 'text-slate-400'
             }`}
           >
             <FolderOpen className="h-5 w-5" />

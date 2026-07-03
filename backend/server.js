@@ -210,12 +210,28 @@ const checkAbusiveText = (text) => {
 io.on('connection', (socket) => {
   console.log('Socket client connected:', socket.id);
 
-  socket.on('register-user', (userId) => {
+  socket.on('register-user', async (userId) => {
     if (userId) {
       onlineUsers[socket.id] = userId;
       userSockets[userId] = socket.id;
       socket.join(String(userId)); // Join standard user room
       io.emit('online-users', Object.values(onlineUsers));
+
+      // Mark all pending messages to this user as delivered
+      try {
+        const Message = require('./models/Message');
+        await Message.updateMany(
+          { recipient: userId, delivered: false },
+          { $set: { delivered: true } }
+        );
+        // Find senders of these messages to notify them
+        const senders = await Message.find({ recipient: userId, read: false }).distinct('sender');
+        senders.forEach(senderId => {
+          io.to(String(senderId)).emit('messages-delivered', { recipientId: userId });
+        });
+      } catch (err) {
+        console.error('Failed to update delivered status on connection:', err);
+      }
     }
   });
 
@@ -258,12 +274,16 @@ io.on('connection', (socket) => {
         return; // Reject message emission
       }
 
+      const recipientSocketId = userSockets[String(recipientId)];
+      const isRecipientOnline = !!recipientSocketId;
+
       const msg = await Message.create({
         sender: senderId,
         recipient: recipientId,
         content,
         messageType: messageType || 'text',
         fileUrl: fileUrl || '',
+        delivered: isRecipientOnline,
       });
 
       // Broadcast to both participants' rooms for multi-tab sync
