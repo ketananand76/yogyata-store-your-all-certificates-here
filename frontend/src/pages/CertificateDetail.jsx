@@ -90,8 +90,8 @@ export default function CertificateDetail() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-screen">
         <div className="glass-panel rounded-2xl p-8 text-center text-red-400 border-red-950/50">
           <p className="mb-4">Certificate not found or failed to fetch.</p>
-          <Link to="/certificates" className="text-accent hover:underline flex items-center gap-1.5 justify-center">
-            <ArrowLeft className="h-4 w-4" /> Return to Gallery
+          <Link to="/" className="text-accent hover:underline flex items-center gap-1.5 justify-center">
+            <ArrowLeft className="h-4 w-4" /> Return to Feed
           </Link>
         </div>
       </div>
@@ -103,10 +103,10 @@ export default function CertificateDetail() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen relative z-10">
       <Link
-        to={isAdmin ? '/admin/dashboard' : (user ? '/dashboard' : '/certificates')}
+        to={isAdmin ? '/admin/dashboard' : (user ? '/dashboard' : '/')}
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-purple-400 hover:text-white transition-colors mb-8"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+        <ArrowLeft className="h-4 w-4" /> Back
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

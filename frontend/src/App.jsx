@@ -84,14 +84,7 @@ export default function App() {
                 </AppLayout>
               }
             />
-            <Route
-              path="/certificates"
-              element={
-                <AppLayout>
-                  <Certificates />
-                </AppLayout>
-              }
-            />
+            <Route path="/certificates" element={<Navigate to="/" replace />} />
             <Route
               path="/certificates/:id"
               element={

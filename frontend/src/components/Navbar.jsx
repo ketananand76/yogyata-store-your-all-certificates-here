@@ -55,14 +55,7 @@ export default function Navbar() {
             >
               <Home className="h-4 w-4" /> Home
             </Link>
-            <Link
-              to="/certificates"
-              className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                isActive('/certificates') ? 'text-accent text-glow-purple' : 'text-gray-300 hover:text-white'
-              }`}
-            >
-              <Grid className="h-4 w-4" /> Gallery
-            </Link>
+
 
             {/* Admin session navigation */}
             {admin && (
@@ -179,15 +172,7 @@ export default function Navbar() {
           >
             <Home className="h-5 w-5" /> Home
           </Link>
-          <Link
-            to="/certificates"
-            onClick={() => setIsOpen(false)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium ${
-              isActive('/certificates') ? 'bg-purple-950/30 text-accent' : 'text-gray-300 hover:bg-purple-950/10'
-            }`}
-          >
-            <Grid className="h-5 w-5" /> Gallery
-          </Link>
+
 
           {admin && (
             <>
