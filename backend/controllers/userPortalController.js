@@ -41,21 +41,50 @@ const registerUser = async (req, res, next) => {
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    const crypto = require('crypto');
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
     const user = await User.create({
       name,
       email,
       passwordHash,
+      isVerified: false,
+      verificationToken,
+      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     });
 
-    setTokenCookie(res, user._id);
+    // Send verification email to user
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+    const verifyLink = `${backendUrl}/api/users/verify/${verificationToken}`;
+    
+    try {
+      const sendEmail = require('../utils/sendEmail');
+      await sendEmail({
+        to: user.email,
+        subject: 'Verify your Yogyata Account',
+        text: `Hello ${user.name},\n\nPlease verify your email address by clicking on the link: ${verifyLink}\n\nThank you!`,
+        html: `<p>Hello ${user.name},</p><p>Please verify your email address by clicking on the link: <a href="${verifyLink}">${verifyLink}</a></p><p>Thank you!</p>`
+      });
+    } catch (err) {
+      console.error('Failed to send verification email:', err);
+    }
+
+    // Send notification email to admin
+    try {
+      const sendEmail = require('../utils/sendEmail');
+      await sendEmail({
+        to: 'ketanpaswan53@gmail.com',
+        subject: 'New User Registered',
+        text: `A new user has registered on Yogyata.\n\nName: ${user.name}\nEmail: ${user.email}`,
+        html: `<p>A new user has registered on Yogyata.</p><p><strong>Name:</strong> ${user.name}<br><strong>Email:</strong> ${user.email}</p>`
+      });
+    } catch (err) {
+      console.error('Failed to send registration notification to admin:', err);
+    }
 
     res.status(201).json({
       success: true,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      message: 'Registration successful! A verification link has been sent to your email. Please verify your email before logging in.',
     });
   } catch (error) {
     next(error);
@@ -76,6 +105,12 @@ const loginUser = async (req, res, next) => {
     if (!user) {
       res.status(401);
       throw new Error('Invalid email or password');
+    }
+
+    // Check email verification status (backward compatible for existing users)
+    if (user.isVerified === false) {
+      res.status(400);
+      throw new Error('Please verify your email address before logging in.');
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
@@ -235,6 +270,32 @@ const deleteUserCertificate = async (req, res, next) => {
   }
 };
 
+// GET /api/users/verify/:token
+const verifyUser = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpires: { $gt: Date.now() },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+    if (!user) {
+      return res.redirect(`${frontendUrl}/login?error=${encodeURIComponent('Verification link is invalid or has expired.')}`);
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await user.save();
+
+    res.redirect(`${frontendUrl}/login?verified=true`);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -243,4 +304,5 @@ module.exports = {
   getUserCertificates,
   uploadUserCertificate,
   deleteUserCertificate,
+  verifyUser,
 };

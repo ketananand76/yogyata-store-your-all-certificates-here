@@ -66,6 +66,7 @@ const {
   getUserCertificates,
   uploadUserCertificate,
   deleteUserCertificate,
+  verifyUser,
 } = require('./controllers/userPortalController');
 const {
   toggleFollow,
@@ -98,6 +99,7 @@ app.get('/api/auth/me', protect, getMe);
 
 // 2. User Portal Auth & Vault routes
 app.post('/api/users/register', registerUser);
+app.get('/api/users/verify/:token', verifyUser);
 app.post('/api/users/login', loginUser);
 app.post('/api/users/logout', logoutUser);
 app.get('/api/users/me', protectUser, getMeUser);
@@ -123,12 +125,23 @@ app.get('/api/messages/:userId', protectUser, getChatMessages);
 app.put('/api/messages/:userId/read', protectUser, markAsRead);
 app.get('/api/notifications', protectUser, getNotifications);
 app.put('/api/notifications/read', protectUser, markAllAsRead);
-app.post('/api/messages/upload', protectUser, upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ success: false, message: 'No file uploaded' });
+app.post('/api/messages/upload', protectUser, upload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+    const { uploadToCloudinary } = require('./config/cloudinary');
+    const cloudinaryResult = await uploadToCloudinary(req.file.path);
+    let fileUrl = '';
+    if (cloudinaryResult) {
+      fileUrl = cloudinaryResult.url;
+    } else {
+      fileUrl = `/uploads/${req.file.filename}`;
+    }
+    res.status(200).json({ success: true, fileUrl });
+  } catch (error) {
+    next(error);
   }
-  const fileUrl = `/uploads/${req.file.filename}`;
-  res.status(200).json({ success: true, fileUrl });
 });
 
 // 5. Admin Monitoring routes

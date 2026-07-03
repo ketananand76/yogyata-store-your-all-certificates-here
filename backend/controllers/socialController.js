@@ -305,11 +305,32 @@ const deleteAccount = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404);
+      throw new Error('User not found');
+    }
+    const userName = user.name;
+    const userEmail = user.email;
+
     // Delete user's certificates
     await Certificate.deleteMany({ uploadedBy: userId });
 
     // Delete the user document
     await User.findByIdAndDelete(userId);
+
+    // Send email to admin
+    try {
+      const sendEmail = require('../utils/sendEmail');
+      await sendEmail({
+        to: 'ketanpaswan53@gmail.com',
+        subject: 'User Profile Deleted',
+        text: `The user ${userName} (${userEmail}) has deleted their profile.`,
+        html: `<p>The user <strong>${userName}</strong> (${userEmail}) has deleted their profile.</p>`
+      });
+    } catch (err) {
+      console.error('Failed to notify admin on user deletion:', err);
+    }
 
     res.clearCookie('token', {
       httpOnly: true,

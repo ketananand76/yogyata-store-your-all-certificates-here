@@ -35,6 +35,10 @@ const protectUser = async (req, res, next) => {
       res.clearCookie('token');
       return res.status(403).json({ success: false, message: 'Your account has been automatically blocked for violating moderation guidelines.' });
     }
+    if (userExists.isVerified === false) {
+      res.clearCookie('token');
+      return res.status(403).json({ success: false, message: 'Please verify your email address before accessing the portal.' });
+    }
 
     req.user = decoded;
     next();

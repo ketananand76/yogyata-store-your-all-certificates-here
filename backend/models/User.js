@@ -60,6 +60,16 @@ const userSchema = new mongoose.Schema(
       type: Object,
       default: null,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationToken: {
+      type: String,
+    },
+    verificationTokenExpires: {
+      type: Date,
+    },
     status: {
       type: String,
       enum: ['active', 'blocked'],
