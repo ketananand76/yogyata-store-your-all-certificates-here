@@ -17,6 +17,11 @@ export default function Home() {
   const [commentInputs, setCommentInputs] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCommentIds, setExpandedCommentIds] = useState({});
+
+  const toggleCommentExpand = (commentId) => {
+    setExpandedCommentIds(prev => ({ ...prev, [commentId]: !prev[commentId] }));
+  };
 
   // ----------------------------------------------------
   // QUERIES & MUTATIONS
@@ -408,21 +413,40 @@ export default function Home() {
                           {/* List of comments */}
                           {post.comments?.length > 0 && (
                             <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
-                              {post.comments.map((comment) => (
-                                <div key={comment._id} className="text-[11px] flex gap-2.5 items-start">
-                                  <div className="w-6.5 h-6.5 rounded-full bg-purple-950 flex items-center justify-center text-[9px] font-bold text-purple-300 overflow-hidden shrink-0 border border-purple-900/35">
-                                    {comment.userProfilePicture ? (
-                                      <img src={getFileUrl(comment.userProfilePicture)} alt={comment.userName} className="w-full h-full object-cover" />
-                                    ) : (
-                                      comment.userName?.charAt(0).toUpperCase()
-                                    )}
-                                  </div>
-                                  <div className="flex-1 bg-[#09080e]/40 p-2.5 rounded-xl border border-purple-950/30">
-                                    <div className="font-bold text-white text-[10px]">{comment.userName}</div>
-                                    <div className="text-gray-300 mt-0.5 leading-relaxed">{comment.text}</div>
-                                  </div>
-                                </div>
-                              ))}
+                                  {post.comments.map((comment) => {
+                                    const isLongComment = comment.text?.length > 120;
+                                    const isExpanded = expandedCommentIds[comment._id];
+                                    const displayedText = isLongComment && !isExpanded 
+                                      ? comment.text.slice(0, 120) + '...' 
+                                      : comment.text;
+
+                                    return (
+                                      <div key={comment._id} className="text-[11px] flex gap-2.5 items-start">
+                                        <div className="w-6.5 h-6.5 rounded-full bg-purple-950 flex items-center justify-center text-[9px] font-bold text-purple-300 overflow-hidden shrink-0 border border-purple-900/35">
+                                          {comment.userProfilePicture ? (
+                                            <img src={getFileUrl(comment.userProfilePicture)} alt={comment.userName} className="w-full h-full object-cover" />
+                                          ) : (
+                                            comment.userName?.charAt(0).toUpperCase()
+                                          )}
+                                        </div>
+                                        <div className="flex-1 bg-[#09080e]/40 p-2.5 rounded-xl border border-purple-950/30">
+                                          <div className="font-bold text-white text-[10px]">{comment.userName}</div>
+                                          <div className="text-gray-300 mt-0.5 leading-relaxed text-[10.5px]">
+                                            {displayedText}
+                                            {isLongComment && (
+                                              <button 
+                                                type="button"
+                                                onClick={() => toggleCommentExpand(comment._id)} 
+                                                className="text-accent ml-1 font-bold hover:underline focus:outline-none"
+                                              >
+                                                {isExpanded ? 'Show less' : 'Read more'}
+                                              </button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                             </div>
                           )}
 
