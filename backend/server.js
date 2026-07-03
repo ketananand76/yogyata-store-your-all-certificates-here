@@ -81,7 +81,6 @@ const {
 const { getChatMessages, markAsRead, getUnreadCounts } = require('./controllers/messageController');
 const { getUsersAndCertificates, approveCertificate, rejectCertificate } = require('./controllers/adminMonitorController');
 const { protectUser } = require('./middleware/authMiddleware');
-const upload = require('./config/upload');
 
 // Serve local static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
