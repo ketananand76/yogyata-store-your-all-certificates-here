@@ -6,7 +6,7 @@ import api, { socketUrl, getFileUrl } from '../utils/api';
 import { io } from 'socket.io-client';
 import { 
   Award, Shield, LogOut, Home, Search, FolderOpen, 
-  MessageSquare, User, Bell, ShieldAlert
+  MessageSquare, User, Bell, ShieldAlert, Briefcase
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -190,6 +190,16 @@ export default function Navbar() {
                     <Search className="h-4 w-4 text-purple-400" /> Search
                   </Link>
 
+                  {/* Jobs Link */}
+                  <Link
+                    to="/jobs"
+                    className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                      isActive('/jobs') ? 'text-accent text-glow-purple' : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    <Briefcase className="h-4 w-4 text-purple-400" /> Jobs
+                  </Link>
+
                   {/* Chat Link with Badges */}
                   <Link
                     to="/chat"
@@ -321,6 +331,17 @@ export default function Navbar() {
                 {unreadChatTotal}
               </span>
             )}
+          </Link>
+
+          {/* Jobs */}
+          <Link
+            to="/jobs"
+            className={`flex flex-col items-center gap-0.5 text-[10px] font-bold ${
+              isActive('/jobs') ? 'text-accent' : 'text-gray-500'
+            }`}
+          >
+            <Briefcase className="h-5 w-5" />
+            <span>Jobs</span>
           </Link>
 
           {/* 4. Notifications */}

@@ -28,6 +28,7 @@ import UserProfile from './pages/UserProfile';
 import UserSearch from './pages/UserSearch';
 import Chat from './pages/Chat';
 import Notifications from './pages/Notifications';
+import Jobs from './pages/Jobs';
 
 // Initialize React Query Client
 const queryClient = new QueryClient({
@@ -53,6 +54,11 @@ function AppLayout({ children }) {
 }
 
 export default function App() {
+  React.useEffect(() => {
+    const savedTheme = localStorage.getItem('yogyata-theme') || 'purple';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -161,6 +167,14 @@ export default function App() {
               element={
                 <AppLayout>
                   <Chat />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/jobs"
+              element={
+                <AppLayout>
+                  <Jobs />
                 </AppLayout>
               }
             />

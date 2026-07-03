@@ -279,7 +279,7 @@ export default function Home() {
                   return (
                     <div
                       key={post._id}
-                      className="bg-[#100f1c]/70 border border-purple-950/45 rounded-2xl overflow-hidden shadow-xl"
+                      className="bg-[#100f1c]/70 border border-purple-950/45 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl hover:border-accent/40 hover:bg-[#131123]/80 transition-all duration-300 transform hover:-translate-y-0.5"
                     >
                       {/* Post Header details */}
                       <div className="p-4 flex items-center justify-between bg-[#08070d]/30 border-b border-purple-950/20">
@@ -307,7 +307,15 @@ export default function Home() {
                                 {post.uploadedBy.name}
                               </Link>
                             )}
-                            <span className="block text-[9px] text-gray-500 uppercase mt-1 tracking-wider">{post.category}</span>
+                            <span className={`inline-block text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 mt-1 rounded border ${
+                              post.category === 'Development' || post.category === 'Web' ? 'bg-blue-950/40 border-blue-900/40 text-blue-400' :
+                              post.category === 'Security' ? 'bg-red-950/40 border-red-900/40 text-red-400' :
+                              post.category === 'Cloud' ? 'bg-cyan-950/40 border-cyan-900/40 text-cyan-400' :
+                              post.category === 'Design' ? 'bg-amber-950/40 border-amber-900/40 text-amber-400' :
+                              'bg-purple-950/40 border-purple-900/40 text-purple-400'
+                            }`}>
+                              {post.category}
+                            </span>
                           </div>
                         </div>
 
@@ -369,20 +377,20 @@ export default function Home() {
                       </div>
 
                       {/* Actions toolbar */}
-                      <div className="px-2 py-1 flex items-center justify-around text-gray-400 text-xs">
+                      <div className="px-2 py-1.5 flex items-center justify-around text-gray-400 text-xs border-t border-purple-950/20 bg-[#08070d]/10">
                         <button
                           onClick={() => handleLike(post._id)}
-                          className={`flex-1 py-2 flex items-center justify-center gap-1.5 hover:bg-[#161427]/40 rounded-xl transition-colors ${
-                            isLiked ? 'text-accent font-bold' : ''
+                          className={`flex-1 py-2.5 flex items-center justify-center gap-1.5 hover:bg-white/5 rounded-xl transition-all hover:scale-105 active:scale-95 ${
+                            isLiked ? 'text-accent font-bold' : 'hover:text-white'
                           }`}
                         >
-                          <ThumbsUp className="h-4 w-4" />
+                          <ThumbsUp className={`h-4 w-4 ${isLiked ? 'fill-current animate-pulse' : ''}`} />
                           <span>Like</span>
                         </button>
                         
                         <button
                           onClick={() => toggleComments(post._id)}
-                          className="flex-1 py-2 flex items-center justify-center gap-1.5 hover:bg-[#161427]/40 rounded-xl transition-colors"
+                          className="flex-1 py-2.5 flex items-center justify-center gap-1.5 hover:bg-white/5 hover:text-white rounded-xl transition-all hover:scale-105 active:scale-95"
                         >
                           <MessageSquare className="h-4 w-4" />
                           <span>Comment</span>
@@ -390,7 +398,7 @@ export default function Home() {
 
                         <button
                           onClick={() => handleShare(post._id)}
-                          className="flex-1 py-2 flex items-center justify-center gap-1.5 hover:bg-[#161427]/40 rounded-xl transition-colors"
+                          className="flex-1 py-2.5 flex items-center justify-center gap-1.5 hover:bg-white/5 hover:text-white rounded-xl transition-all hover:scale-105 active:scale-95"
                         >
                           <Share2 className="h-4 w-4" />
                           <span>Share</span>
@@ -399,7 +407,7 @@ export default function Home() {
                         {!belongsToAdmin && !isSelfPost && (
                           <button
                             onClick={() => handleSendToChat(creatorId)}
-                            className="flex-1 py-2 flex items-center justify-center gap-1.5 hover:bg-[#161427]/40 rounded-xl transition-colors"
+                            className="flex-1 py-2.5 flex items-center justify-center gap-1.5 hover:bg-white/5 hover:text-white rounded-xl transition-all hover:scale-105 active:scale-95"
                           >
                             <Send className="h-4 w-4" />
                             <span>Send</span>

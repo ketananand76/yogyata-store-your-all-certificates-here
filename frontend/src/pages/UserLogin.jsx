@@ -20,8 +20,17 @@ export default function UserLogin() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const errParam = params.get('error');
+    const msgParam = params.get('message');
+    const verifiedParam = params.get('verified');
     if (errParam) {
       toast.error(errParam, { duration: 6000 });
+      window.history.replaceState(null, '', '/login');
+    }
+    if (verifiedParam) {
+      toast.success('Email successfully verified! You can now log in.', { duration: 6000 });
+      window.history.replaceState(null, '', '/login');
+    } else if (msgParam) {
+      toast.success(msgParam, { duration: 6000 });
       window.history.replaceState(null, '', '/login');
     }
   }, []);

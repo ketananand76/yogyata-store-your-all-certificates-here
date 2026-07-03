@@ -35,8 +35,8 @@ export default function Register() {
       });
 
       if (data.success) {
-        toast.success(`Registration successful! Welcome ${name}`);
-        await checkAuth(); // refresh auth status
+        toast.success('Registration successful! Welcome to Yogyata.');
+        await checkAuth();
         navigate('/dashboard');
       }
     } catch (error) {

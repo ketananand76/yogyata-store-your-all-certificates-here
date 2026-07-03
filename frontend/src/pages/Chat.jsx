@@ -8,7 +8,7 @@ import {
   Send, MessageSquare, Phone, Video, Loader2, Image,
   Search, Users, ArrowLeft, Plus, Check, CheckCheck,
   Smile, Mic, MoreVertical, Camera, File, X, Circle,
-  PhoneIncoming, PhoneOutgoing, PhoneCall, Clock
+  PhoneIncoming, PhoneOutgoing, PhoneCall, Clock, Download, ArrowDown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CallModal from '../components/CallModal';
@@ -71,10 +71,14 @@ export default function Chat() {
   const [callInfo, setCallInfo] = useState(null);
 
   const chatBottomRef = useRef(null);
+  const chatContainerRef = useRef(null);
   const fileInputRef = useRef(null);
   const selectedUserRef = useRef(null);
   const chatTypeRef = useRef('direct');
   const typingTimeoutRef = useRef(null);
+
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [activeMediaUrl, setActiveMediaUrl] = useState(null);
 
   useEffect(() => {
     selectedUserRef.current = selectedUser;
@@ -261,10 +265,36 @@ export default function Chat() {
     socket.emit('join-group', selectedUser.id);
   }, [selectedUser, chatType, socket]);
 
-  // Auto-scroll
+  const scrollToBottom = useCallback((behavior = 'smooth') => {
+    if (chatBottomRef.current) {
+      chatBottomRef.current.scrollIntoView({ behavior, block: 'end' });
+    }
+  }, []);
+
+  // Auto-scroll on message changes
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isPeerTyping]);
+    if (messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      const isNewMessage = (Date.now() - new Date(lastMsg.createdAt).getTime()) < 6000;
+      scrollToBottom(isNewMessage ? 'smooth' : 'auto');
+    } else {
+      scrollToBottom('auto');
+    }
+  }, [messages, scrollToBottom]);
+
+  // Scroll to bottom when typing status changes
+  useEffect(() => {
+    if (isPeerTyping) {
+      scrollToBottom('smooth');
+    }
+  }, [isPeerTyping, scrollToBottom]);
+
+  const handleScroll = () => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 250;
+    setShowScrollButton(!isAtBottom);
+  };
 
   // Status auto-progress
   useEffect(() => {
@@ -753,7 +783,9 @@ export default function Chat() {
 
               {/* Messages Area */}
               <div
-                className="flex-1 overflow-y-auto px-4 py-5 space-y-1"
+                ref={chatContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto px-4 py-5 space-y-1 relative"
                 style={{ background: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M40 40 L60 20 L80 40 L60 60 Z' fill='rgba(139,92,246,0.015)'/%3E%3C/svg%3E\")" }}
                 onClick={() => setShowReactionPicker(null)}
               >
@@ -780,7 +812,7 @@ export default function Chat() {
                       const showAvatar = !isSelf && prevIsSelf !== false;
 
                       return (
-                        <div key={msg._id || index} className={`flex ${isSelf ? 'justify-end' : 'justify-start'} group/msg mb-1`}>
+                        <div key={msg._id || index} className={`flex ${isSelf ? 'justify-end' : 'justify-start'} group/msg mb-1 animate-message-bubble`}>
                           {/* Avatar for received (group only or first in sequence) */}
                           {!isSelf && chatType === 'group' && (
                             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-700 to-violet-900 flex items-center justify-center text-[10px] font-bold text-white mr-2 mt-auto mb-1 shrink-0">
@@ -808,11 +840,13 @@ export default function Chat() {
                             >
                               {/* Image message */}
                               {msg.messageType === 'image' ? (
-                                <div className="max-w-[200px]">
+                                <div className="max-w-[200px] overflow-hidden rounded-xl">
                                   <img
                                     src={getFileUrl(msg.fileUrl)}
                                     alt="Media"
-                                    className="w-full h-auto rounded-xl max-h-52 object-cover cursor-zoom-in hover:opacity-95 transition-opacity"
+                                    onLoad={() => scrollToBottom('smooth')}
+                                    onClick={() => setActiveMediaUrl(msg.fileUrl)}
+                                    className="w-full h-auto rounded-xl max-h-52 object-cover cursor-zoom-in hover:scale-105 transition-all duration-300"
                                   />
                                 </div>
                               ) : (
@@ -919,6 +953,50 @@ export default function Chat() {
                   )}
                 </form>
               </div>
+
+              {/* Scroll to bottom button */}
+              {showScrollButton && (
+                <button
+                  type="button"
+                  onClick={() => scrollToBottom('smooth')}
+                  className="absolute bottom-20 right-6 p-3 bg-green-600 hover:bg-green-500 text-white rounded-full shadow-2xl transition-all duration-200 z-30 hover:scale-110 flex items-center justify-center animate-float-up"
+                  title="Scroll to bottom"
+                >
+                  <ArrowDown className="h-5 w-5" />
+                </button>
+              )}
+
+              {/* Fullscreen Media Viewer */}
+              {activeMediaUrl && (
+                <div className="fixed inset-0 z-[250] bg-black/90 flex flex-col items-center justify-center p-4 backdrop-blur-md transition-all-custom">
+                  <div className="absolute top-4 right-4 flex gap-3 z-[260]">
+                    <a
+                      href={getFileUrl(activeMediaUrl)}
+                      download
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all"
+                      title="Download media"
+                    >
+                      <Download className="h-5 w-5" />
+                    </a>
+                    <button
+                      onClick={() => setActiveMediaUrl(null)}
+                      className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                      title="Close"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <div className="relative max-w-5xl max-h-[85vh] flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 shadow-2xl p-2 bg-[#111827]/40 animate-float-up">
+                    <img
+                      src={getFileUrl(activeMediaUrl)}
+                      alt="Zoomed Media"
+                      className="max-w-full max-h-[80vh] object-contain rounded-xl"
+                    />
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             /* Empty state */

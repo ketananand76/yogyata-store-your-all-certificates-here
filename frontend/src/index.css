@@ -2,9 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-accent: #a855f7;
+  --color-accent-light: #c084fc;
+  --color-accent-dark: #7e22ce;
+  --color-bg: #0a0a0f;
+  --color-card: rgba(18, 17, 29, 0.7);
+  --color-border: rgba(168, 85, 247, 0.1);
+}
+
+[data-theme="emerald"] {
+  --color-accent: #10b981;
+  --color-accent-light: #34d399;
+  --color-accent-dark: #047857;
+  --color-bg: #060f0e;
+  --color-card: rgba(11, 28, 25, 0.7);
+  --color-border: rgba(16, 185, 129, 0.15);
+}
+
+[data-theme="cyberpunk"] {
+  --color-accent: #ec4899;
+  --color-accent-light: #f472b6;
+  --color-accent-dark: #be185d;
+  --color-bg: #0b0716;
+  --color-card: rgba(21, 15, 38, 0.75);
+  --color-border: rgba(236, 72, 153, 0.18);
+}
+
+[data-theme="saffron"] {
+  --color-accent: #f59e0b;
+  --color-accent-light: #fbbf24;
+  --color-accent-dark: #b45309;
+  --color-bg: #0f0b06;
+  --color-card: rgba(28, 21, 12, 0.7);
+  --color-border: rgba(245, 158, 11, 0.15);
+}
+
+[data-theme="slate"] {
+  --color-accent: #3b82f6;
+  --color-accent-light: #60a5fa;
+  --color-accent-dark: #1d4ed8;
+  --color-bg: #090d16;
+  --color-card: rgba(17, 24, 39, 0.75);
+  --color-border: rgba(59, 130, 246, 0.15);
+}
+
 @layer base {
   body {
-    @apply bg-[#0a0a0f] text-gray-100 font-sans antialiased selection:bg-accent selection:text-white;
+    @apply bg-dark-bg text-gray-100 font-sans antialiased selection:bg-accent selection:text-white;
   }
 }
 
@@ -14,26 +59,26 @@
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0d0c15;
+  background: var(--color-bg, #0d0c15);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e1b4b;
+  background: var(--color-accent-dark, #1e1b4b);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #2e2a72;
+  background: var(--color-accent, #2e2a72);
 }
 
 /* Glassmorphism Classes */
 .glass-panel {
-  background: rgba(18, 17, 29, 0.7);
+  background: var(--color-card, rgba(18, 17, 29, 0.7));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(168, 85, 247, 0.1);
+  border: 1px solid var(--color-border, rgba(168, 85, 247, 0.1));
 }
 
 .glass-panel-gold {
-  background: rgba(18, 17, 29, 0.85);
+  background: var(--color-card, rgba(18, 17, 29, 0.85));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(212, 175, 55, 0.2);
@@ -105,3 +150,41 @@
 .animate-status-bar {
   animation: statusBarProgress 5s linear forwards;
 }
+
+/* Chat entry and scroll animations */
+@keyframes message-appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-message-bubble {
+  animation: message-appear 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Float-in for floating scroll to bottom button */
+@keyframes float-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float-up {
+  animation: float-up 0.2s ease-out forwards;
+}
+
+/* Custom overlay background blur transition */
+.transition-all-custom {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+

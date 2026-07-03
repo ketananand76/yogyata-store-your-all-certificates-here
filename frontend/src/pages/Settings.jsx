@@ -9,6 +9,25 @@ export default function Settings() {
   const { user, loading, checkAuth, logout } = useAuth();
   const navigate = useNavigate();
 
+  const [activeTheme, setActiveTheme] = useState(localStorage.getItem('yogyata-theme') || 'purple');
+
+  const handleThemeChange = (newTheme) => {
+    setActiveTheme(newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('yogyata-theme', newTheme);
+    toast.success(`Theme switched to ${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)}!`, { icon: '🎨' });
+  };
+
+  const handleLogout = async () => {
+    const res = await logout();
+    if (res.success) {
+      toast.success('Logged out successfully');
+      navigate('/');
+    } else {
+      toast.error('Logout failed');
+    }
+  };
+
   const [name, setName] = useState(user?.name || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [gender, setGender] = useState(user?.gender || '');
@@ -343,8 +362,81 @@ export default function Settings() {
           </button>
         </form>
 
-        {/* Account Deletion Area (4 cols) */}
-        <div className="md:col-span-4 space-y-4">
+        {/* Sidebar Controls (4 cols) */}
+        <div className="md:col-span-4 space-y-6">
+          
+          {/* Theme Selector */}
+          <div className="glass-panel p-6 rounded-2xl space-y-4 shadow-xl border-purple-950/40">
+            <h3 className="font-accent text-xs font-bold uppercase tracking-wider text-purple-300">Appearance Theme</h3>
+            <p className="text-[10px] text-gray-400 leading-relaxed">
+              Select your preferred visual style. The theme resets custom gradients, borders, and colors dynamically.
+            </p>
+            
+            <div className="grid grid-cols-5 gap-2 pt-2">
+              {/* 1. Purple */}
+              <button
+                type="button"
+                onClick={() => handleThemeChange('purple')}
+                className={`h-8 w-full rounded-lg bg-[#a855f7] border-2 transition-all hover:scale-110 active:scale-95 ${
+                  activeTheme === 'purple' ? 'border-white scale-105 shadow-md shadow-purple-500/30' : 'border-transparent opacity-80'
+                }`}
+                title="Amethyst Purple"
+              />
+              {/* 2. Emerald */}
+              <button
+                type="button"
+                onClick={() => handleThemeChange('emerald')}
+                className={`h-8 w-full rounded-lg bg-[#10b981] border-2 transition-all hover:scale-110 active:scale-95 ${
+                  activeTheme === 'emerald' ? 'border-white scale-105 shadow-md shadow-emerald-500/30' : 'border-transparent opacity-80'
+                }`}
+                title="Emerald Mint"
+              />
+              {/* 3. Cyberpunk */}
+              <button
+                type="button"
+                onClick={() => handleThemeChange('cyberpunk')}
+                className={`h-8 w-full rounded-lg bg-[#ec4899] border-2 transition-all hover:scale-110 active:scale-95 ${
+                  activeTheme === 'cyberpunk' ? 'border-white scale-105 shadow-md shadow-pink-500/30' : 'border-transparent opacity-80'
+                }`}
+                title="Cyberpunk Neon"
+              />
+              {/* 4. Saffron */}
+              <button
+                type="button"
+                onClick={() => handleThemeChange('saffron')}
+                className={`h-8 w-full rounded-lg bg-[#f59e0b] border-2 transition-all hover:scale-110 active:scale-95 ${
+                  activeTheme === 'saffron' ? 'border-white scale-105 shadow-md shadow-amber-500/30' : 'border-transparent opacity-80'
+                }`}
+                title="Saffron Gold"
+              />
+              {/* 5. Slate */}
+              <button
+                type="button"
+                onClick={() => handleThemeChange('slate')}
+                className={`h-8 w-full rounded-lg bg-[#3b82f6] border-2 transition-all hover:scale-110 active:scale-95 ${
+                  activeTheme === 'slate' ? 'border-white scale-105 shadow-md shadow-blue-500/30' : 'border-transparent opacity-80'
+                }`}
+                title="Midnight Slate"
+              />
+            </div>
+          </div>
+
+          {/* Session Controls */}
+          <div className="glass-panel p-6 rounded-2xl space-y-4 shadow-xl border-purple-950/40">
+            <h3 className="font-accent text-xs font-bold uppercase tracking-wider text-purple-300">Session Controls</h3>
+            <p className="text-[10px] text-gray-400 leading-relaxed">
+              Log out of your active Yogyata portal session on this browser.
+            </p>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full bg-[#161426] hover:bg-purple-950/20 border border-purple-900/50 hover:border-accent text-white font-bold py-2 rounded-xl text-xs hover:scale-[1.01] active:scale-[0.98] transition-all"
+            >
+              Logout Session
+            </button>
+          </div>
+
+          {/* Danger Zone */}
           <div className="glass-panel border-red-500/20 bg-red-950/5 p-6 rounded-2xl space-y-4 shadow-xl">
             <div className="flex items-center gap-2 text-red-400">
               <ShieldAlert className="h-5 w-5 shrink-0" />
@@ -356,6 +448,7 @@ export default function Settings() {
             </p>
 
             <button
+              type="button"
               onClick={handleDeleteAccount}
               disabled={isDeleting}
               className="w-full bg-red-650 hover:bg-red-750 text-white font-bold py-2 rounded-xl text-xs hover:scale-[1.01] transition-all disabled:opacity-50"
