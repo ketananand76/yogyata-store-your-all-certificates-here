@@ -66,8 +66,8 @@ const {
   getUserCertificates,
   uploadUserCertificate,
   deleteUserCertificate,
-  verifyUser,
 } = require('./controllers/userPortalController');
+const { getJobs, createJob, applyJob, deleteJob } = require('./controllers/jobController');
 const {
   toggleFollow,
   searchUsers,
@@ -99,7 +99,6 @@ app.get('/api/auth/me', protect, getMe);
 
 // 2. User Portal Auth & Vault routes
 app.post('/api/users/register', registerUser);
-app.get('/api/users/verify/:token', verifyUser);
 app.post('/api/users/login', loginUser);
 app.post('/api/users/logout', logoutUser);
 app.get('/api/users/me', protectUser, getMeUser);
@@ -162,6 +161,12 @@ app.put('/api/certificates/:id', protect, upload.single('file'), (req, res, next
   next();
 }, validateCertificate, updateCertificate);
 app.delete('/api/certificates/:id', protect, deleteCertificate);
+
+// 8. Job Board routes
+app.get('/api/jobs', protectUser, getJobs);
+app.post('/api/jobs', protectUser, createJob);
+app.post('/api/jobs/:id/apply', protectUser, applyJob);
+app.delete('/api/jobs/:id', protectUser, deleteJob);
 
 // Centralized error handler
 app.use(errorHandler);

@@ -31,6 +31,13 @@ const registerUser = async (req, res, next) => {
       throw new Error('Please fill in all fields (name, email, password)');
     }
 
+    // Validate email format strictly at registration
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400);
+      throw new Error('Please enter a valid email address');
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       res.status(400);
@@ -41,33 +48,12 @@ const registerUser = async (req, res, next) => {
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    const crypto = require('crypto');
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-
     const user = await User.create({
       name,
       email,
       passwordHash,
-      isVerified: false,
-      verificationToken,
-      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+      isVerified: true, // Auto-verified
     });
-
-    // Send verification email to user
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-    const verifyLink = `${backendUrl}/api/users/verify/${verificationToken}`;
-    
-    try {
-      const sendEmail = require('../utils/sendEmail');
-      await sendEmail({
-        to: user.email,
-        subject: 'Verify your Yogyata Account',
-        text: `Hello ${user.name},\n\nPlease verify your email address by clicking on the link: ${verifyLink}\n\nThank you!`,
-        html: `<p>Hello ${user.name},</p><p>Please verify your email address by clicking on the link: <a href="${verifyLink}">${verifyLink}</a></p><p>Thank you!</p>`
-      });
-    } catch (err) {
-      console.error('Failed to send verification email:', err);
-    }
 
     // Send notification email to admin
     try {
@@ -82,9 +68,16 @@ const registerUser = async (req, res, next) => {
       console.error('Failed to send registration notification to admin:', err);
     }
 
+    // Automatically set token cookie to log the user in immediately
+    setTokenCookie(res, user._id);
+
     res.status(201).json({
       success: true,
-      message: 'Registration successful! A verification link has been sent to your email. Please verify your email before logging in.',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      },
     });
   } catch (error) {
     next(error);
@@ -105,12 +98,6 @@ const loginUser = async (req, res, next) => {
     if (!user) {
       res.status(401);
       throw new Error('Invalid email or password');
-    }
-
-    // Check email verification status (backward compatible for existing users)
-    if (user.isVerified === false) {
-      res.status(400);
-      throw new Error('Please verify your email address before logging in.');
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
