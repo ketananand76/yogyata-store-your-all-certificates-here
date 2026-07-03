@@ -5,17 +5,17 @@ import { Mail, Lock, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function UserLogin() {
-  const { user, loginUser } = useAuth();
+  const { user, loading, loginUser } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       navigate('/dashboard', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +30,6 @@ export default function UserLogin() {
     if (res.success) {
       toast.success('Login successful. Welcome back!');
       navigate('/dashboard');
-      window.location.reload();
     } else {
       toast.error(res.message);
     }

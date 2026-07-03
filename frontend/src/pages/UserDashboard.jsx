@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 const categories = ['Development', 'Cloud', 'Security', 'Data Science', 'Academic', 'Design', 'Other'];
 
 export default function UserDashboard() {
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -25,10 +25,10 @@ export default function UserDashboard() {
 
   // Redirect if guest
   React.useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       navigate('/login');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   // Fetch only this user's certificates
   const { data, isLoading, error } = useQuery({
@@ -122,7 +122,7 @@ export default function UserDashboard() {
     navigate('/');
   };
 
-  if (isLoading || !user) {
+  if (loading || isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-dark-bg">
         <Loader2 className="h-8 w-8 animate-spin text-accent" />

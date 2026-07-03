@@ -7,12 +7,18 @@ import toast from 'react-hot-toast';
 
 export default function Register() {
   const navigate = useNavigate();
-  const { checkAuth } = useAuth();
+  const { user, loading, checkAuth } = useAuth();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  React.useEffect(() => {
+    if (!loading && user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -8,7 +8,7 @@ const getCertificates = async (req, res, next) => {
   try {
     const { category, search, featured, sortBy, page = 1, limit = 12 } = req.query;
 
-    const query = {};
+    const query = { uploadedBy: null };
 
     if (category && category !== 'All') {
       query.category = category;
@@ -69,6 +69,36 @@ const getCertificateById = async (req, res, next) => {
     if (!certificate) {
       res.status(404);
       throw new Error('Certificate not found');
+    }
+
+    // Security segregation: if user-owned, verify requester is the owner or admin
+    if (certificate.uploadedBy) {
+      const jwt = require('jsonwebtoken');
+      const Admin = require('../models/Admin');
+      const token = req.cookies.token;
+      let isAuthorized = false;
+
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secretkey123');
+          
+          // Check if admin token
+          const isAdminExists = await Admin.findById(decoded.id);
+          if (isAdminExists) {
+            isAuthorized = true;
+          } else if (String(certificate.uploadedBy) === String(decoded.id)) {
+            // Check if standard user owner token
+            isAuthorized = true;
+          }
+        } catch (err) {
+          // invalid token
+        }
+      }
+
+      if (!isAuthorized) {
+        res.status(403);
+        throw new Error('Forbidden: You do not have permission to view this certificate');
+      }
     }
 
     res.status(200).json({
