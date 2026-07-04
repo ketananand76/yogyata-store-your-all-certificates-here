@@ -78,6 +78,16 @@ export default function UserDashboard() {
     enabled: !!user,
   });
 
+  // Fetch real-time stats count from profile query
+  const { data: profileData } = useQuery({
+    queryKey: ['userProfileDashboard', user?._id],
+    queryFn: async () => {
+      const res = await api.get(`/api/social/profile/${user._id}`);
+      return res.data;
+    },
+    enabled: !!user?._id,
+  });
+
   // Delete certificate mutation
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
@@ -376,6 +386,23 @@ export default function UserDashboard() {
             <LogOut className="h-4.5 w-4.5" /> Logout
           </button>
         </div>
+      </div>
+
+      {/* Profile Stats Dashboard */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        {[
+          { label: 'Verified Certificates', count: profileData?.certificates?.filter(c => c.status === 'approved')?.length || 0, color: 'text-purple-400' },
+          { label: 'Followers', count: profileData?.user?.followers?.length || 0, color: 'text-cyan-400' },
+          { label: 'Following', count: profileData?.user?.following?.length || 0, color: 'text-pink-400' },
+        ].map((stat, i) => (
+          <div key={i} className="glass-panel p-6 rounded-2xl border border-purple-950/40 flex flex-col justify-center relative overflow-hidden group hover:border-purple-800/60 transition-all hover:-translate-y-0.5">
+            <span className="text-[10px] uppercase font-bold text-gray-500 tracking-widest">{stat.label}</span>
+            <span className={`text-4xl font-extrabold font-accent mt-2 tracking-tight ${stat.color} text-glow-purple`}>
+              {stat.count}
+            </span>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none group-hover:bg-purple-500/10 transition-colors"></div>
+          </div>
+        ))}
       </div>
 
       {/* Upload Form Modal */}

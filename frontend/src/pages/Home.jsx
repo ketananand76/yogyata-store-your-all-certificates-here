@@ -63,6 +63,16 @@ export default function Home() {
     enabled: !!user,
   });
 
+  // Fetch real-time stats count from profile query for sidebar
+  const { data: profileStats } = useQuery({
+    queryKey: ['userProfileHomeSidebar', user?._id],
+    queryFn: async () => {
+      const res = await api.get(`/api/social/profile/${user._id}`);
+      return res.data;
+    },
+    enabled: !!user?._id,
+  });
+
   // Like Mutation
   const likeMutation = useMutation({
     mutationFn: async (id) => {
@@ -196,12 +206,12 @@ export default function Home() {
 
                 <div className="border-t border-purple-950/50 pt-4 flex justify-around text-xs text-gray-400">
                   <div className="text-center flex-1">
-                    <span className="block font-bold text-white text-sm">{user.followers?.length || 0}</span>
+                    <span className="block font-bold text-white text-sm">{profileStats?.user?.followers?.length || 0}</span>
                     <span className="text-[8px] text-gray-500 uppercase tracking-widest font-semibold mt-0.5 block">Followers</span>
                   </div>
                   <div className="w-px bg-purple-950/55 self-stretch"></div>
                   <div className="text-center flex-1">
-                    <span className="block font-bold text-white text-sm">{user.following?.length || 0}</span>
+                    <span className="block font-bold text-white text-sm">{profileStats?.user?.following?.length || 0}</span>
                     <span className="text-[8px] text-gray-500 uppercase tracking-widest font-semibold mt-0.5 block">Following</span>
                   </div>
                 </div>
@@ -210,11 +220,8 @@ export default function Home() {
 
             {/* Quick links shortcut panel */}
             <div className="glass-panel p-4 rounded-2xl border-purple-950/45 bg-[#0c0a13]/85 text-xs space-y-2.5 hidden lg:block">
-              <Link to="/certificates" className="block text-gray-400 hover:text-white transition-colors">
+              <Link to="/dashboard" className="block text-gray-400 hover:text-white transition-colors">
                 My Vault
-              </Link>
-              <Link to="/chat" className="block text-gray-400 hover:text-white transition-colors">
-                Direct Messages
               </Link>
               <Link to="/search" className="block text-gray-400 hover:text-white transition-colors">
                 Explore Directory

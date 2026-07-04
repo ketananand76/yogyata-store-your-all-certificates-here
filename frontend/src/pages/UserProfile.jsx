@@ -459,12 +459,6 @@ export default function UserProfile() {
                   >
                     {isFollowing ? 'Following' : isFollowerOfMe ? 'Follow Back' : 'Follow'}
                   </button>
-                  <button
-                    onClick={handleMessageClick}
-                    className="bg-purple-950/30 border border-purple-800/40 hover:bg-purple-900/30 text-purple-300 font-bold px-6 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all"
-                  >
-                    <MessageSquare className="h-3.5 w-3.5" /> Message
-                  </button>
                 </>
               )}
             </div>

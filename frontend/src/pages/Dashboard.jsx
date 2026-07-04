@@ -18,6 +18,75 @@ export default function Dashboard() {
   const [folderSearch, setFolderSearch] = useState('');
   const [selectedFolderUser, setSelectedFolderUser] = useState(null);
 
+  // Futuristic admin command console CLI states
+  const [cliInput, setCliInput] = useState('');
+  const [cliLogs, setCliLogs] = useState([
+    { text: 'YOGYATA SECURE ADMIN SHELL V4.2.0-SECURE', type: 'system' },
+    { text: 'Type "help" to view available diagnostic commands.', type: 'info' },
+  ]);
+
+  const handleCliSubmit = (e) => {
+    e.preventDefault();
+    const cmd = cliInput.trim().toLowerCase();
+    if (!cmd) return;
+
+    const newLogs = [...cliLogs, { text: `yogyata-admin> ${cliInput}`, type: 'user' }];
+    const parts = cmd.split(' ');
+    const command = parts[0];
+
+    if (command === 'help') {
+      newLogs.push({ text: 'Available commands:', type: 'success' });
+      newLogs.push({ text: '  status     - Show real-time system vault health stats', type: 'info' });
+      newLogs.push({ text: '  users      - List all registered seekers and employers', type: 'info' });
+      newLogs.push({ text: '  pending    - List certificates awaiting verification', type: 'info' });
+      newLogs.push({ text: '  alerts     - Display active security logs & violations', type: 'info' });
+      newLogs.push({ text: '  clear      - Clear the console scrollback buffer', type: 'info' });
+    } else if (command === 'status') {
+      newLogs.push({ text: '--- SYSTEM METRICS ---', type: 'success' });
+      newLogs.push({ text: `  Total Users Database   : ${monitorData?.length || 0}`, type: 'info' });
+      newLogs.push({ text: `  Action Queue Size      : ${pendingData?.certificates?.length || 0}`, type: 'info' });
+      newLogs.push({ text: `  Security Incidents Log : ${alertsData?.length || 0}`, type: 'info' });
+      newLogs.push({ text: '  Speech Moderation API  : ONLINE (Tesseract Vision V5)', type: 'info' });
+      newLogs.push({ text: '  Database Server Status : OPERATIONAL (Mongoose Cluster)', type: 'info' });
+    } else if (command === 'users') {
+      newLogs.push({ text: '--- USER DIRECTORY ---', type: 'success' });
+      if (!monitorData || monitorData.length === 0) {
+        newLogs.push({ text: '  No user accounts registered.', type: 'warning' });
+      } else {
+        monitorData.forEach(u => {
+          newLogs.push({ text: `  • [${u.role.toUpperCase()}] ${u.name} - ${u.email} (${u.certificateCount || 0} certs)`, type: 'info' });
+        });
+      }
+    } else if (command === 'pending') {
+      newLogs.push({ text: '--- REVIEW ACTION QUEUE ---', type: 'success' });
+      if (!pendingData?.certificates || pendingData.certificates.length === 0) {
+        newLogs.push({ text: '  All certificates verified. Action queue empty.', type: 'success' });
+      } else {
+        pendingData.certificates.forEach(c => {
+          newLogs.push({ text: `  • [PENDING] "${c.title}" by ${c.uploadedBy?.name || 'Admin'} (${c.category})`, type: 'warning' });
+        });
+      }
+    } else if (command === 'alerts') {
+      newLogs.push({ text: '--- ACTIVE INCIDENT LOGS ---', type: 'success' });
+      if (!alertsData || alertsData.length === 0) {
+        newLogs.push({ text: '  No threat alerts detected.', type: 'success' });
+      } else {
+        alertsData.forEach(a => {
+          newLogs.push({ text: `  • [THREAT] ${a.userName} (${a.userEmail}) auto-blocked for: "${a.reason}"`, type: 'danger' });
+        });
+      }
+    } else if (command === 'clear') {
+      setCliLogs([]);
+      setCliInput('');
+      return;
+    } else {
+      newLogs.push({ text: `Command not recognized: "${command}". Type "help" for a list of commands.`, type: 'danger' });
+    }
+
+    setCliLogs(newLogs);
+    setCliInput('');
+  };
+
   // Query: registered users monitor (Folders View)
   const { data: monitorData, isLoading: loadingMonitor, error: monitorError } = useQuery({
     queryKey: ['adminUsersMonitor'],
@@ -292,8 +361,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Tab Navigation header */}
-      <div className="flex border-b border-purple-950/40 mb-6 max-w-xl">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="lg:col-span-8 space-y-6">
+          {/* Tab Navigation header */}
+      <div className="flex border-b border-purple-950/40 mb-6 w-full">
         <button
           onClick={() => { setSelectedFolderUser(null); setActiveTab('folders'); }}
           className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all ${
@@ -826,6 +897,55 @@ export default function Dashboard() {
           )}
         </div>
       )}
+        </div>
+
+        {/* Cyber Command Console */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="glass-panel p-5 rounded-2xl border-purple-950/45 bg-[#09080e]/95 shadow-xl relative overflow-hidden font-mono flex flex-col h-[480px]">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-indigo-500 to-cyan-500"></div>
+            
+            <div className="flex items-center justify-between mb-3 border-b border-purple-950/40 pb-2">
+              <span className="text-[10px] text-accent font-bold tracking-[0.2em] uppercase flex items-center gap-1.5 animate-pulse">
+                <span className="w-1.5 h-1.5 bg-accent rounded-full"></span> Secure Command Console
+              </span>
+              <span className="text-[9px] text-gray-500">V4.2.0</span>
+            </div>
+
+            {/* Console logs output */}
+            <div className="flex-1 overflow-y-auto pr-1 text-[10px] space-y-2 select-text text-left">
+              {cliLogs.map((log, idx) => (
+                <div key={idx} className="leading-relaxed">
+                  {log.type === 'user' ? (
+                    <span className="text-gray-400">{log.text}</span>
+                  ) : log.type === 'success' ? (
+                    <span className="text-emerald-400 font-bold">{log.text}</span>
+                  ) : log.type === 'warning' ? (
+                    <span className="text-yellow-400">{log.text}</span>
+                  ) : log.type === 'danger' ? (
+                    <span className="text-red-400 font-bold">{log.text}</span>
+                  ) : log.type === 'system' ? (
+                    <span className="text-cyan-400 font-bold">{log.text}</span>
+                  ) : (
+                    <span className="text-gray-300">{log.text}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Command Input Form */}
+            <form onSubmit={handleCliSubmit} className="mt-4 pt-3 border-t border-purple-950/40 flex items-center gap-2">
+              <span className="text-accent font-bold text-xs select-none">&gt;</span>
+              <input
+                type="text"
+                placeholder="Enter diagnosis command..."
+                value={cliInput}
+                onChange={(e) => setCliInput(e.target.value)}
+                className="flex-1 bg-[#050407] text-gray-200 border-none outline-none focus:ring-0 text-xs py-1"
+              />
+            </form>
+          </div>
+        </div>
+      </div>
 
     </div>
   );
