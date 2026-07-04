@@ -6,7 +6,7 @@ import api, { getFileUrl } from '../utils/api';
 import { 
   ThumbsUp, MessageSquare, Share2, Send, ShieldCheck, Loader2, 
   FileText, ArrowRight, Award, Plus, CheckCircle2, ExternalLink, Search,
-  ChevronDown, ChevronUp, Cpu, Zap, Sparkles, Clock, Mail, Check, Users
+  ChevronDown, ChevronUp, Cpu, Zap, Sparkles, Clock, Mail, Check, Users, Briefcase
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
