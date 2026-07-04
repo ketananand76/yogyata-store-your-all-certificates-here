@@ -41,8 +41,24 @@ const jobSchema = new mongoose.Schema(
     },
     applicants: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: true,
+        },
+        resumeUrl: {
+          type: String,
+          default: '',
+        },
+        status: {
+          type: String,
+          enum: ['applied', 'shortlisted', 'rejected'],
+          default: 'applied',
+        },
+        appliedAt: {
+          type: Date,
+          default: Date.now,
+        },
       }
     ],
   },

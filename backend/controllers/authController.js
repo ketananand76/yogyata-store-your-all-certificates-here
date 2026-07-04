@@ -70,8 +70,7 @@ const getMe = async (req, res, next) => {
   try {
     const admin = await Admin.findById(req.admin.id).select('-passwordHash');
     if (!admin) {
-      res.status(404);
-      throw new Error('Admin user not found');
+      return res.status(401).json({ success: false, message: 'Admin session invalid or not authorized' });
     }
 
     res.status(200).json({

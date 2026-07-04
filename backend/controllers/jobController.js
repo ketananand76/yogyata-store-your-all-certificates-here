@@ -26,7 +26,7 @@ const getJobs = async (req, res, next) => {
 
     const jobs = await Job.find(query)
       .populate('postedBy', 'name email profilePicture')
-      .populate('applicants', 'name email profilePicture bio')
+      .populate('applicants.user', 'name email profilePicture bio')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -42,6 +42,11 @@ const getJobs = async (req, res, next) => {
 const createJob = async (req, res, next) => {
   try {
     const { title, company, location, type, description, salary, skillsRequired } = req.body;
+
+    if (req.user.role !== 'Employer' && req.user.role !== 'HR Manager') {
+      res.status(403);
+      throw new Error('Only Employer and HR Manager roles can create jobs');
+    }
 
     if (!title || !company || !location || !description) {
       res.status(400);
@@ -86,23 +91,33 @@ const applyJob = async (req, res, next) => {
       throw new Error('Job not found');
     }
 
+    if (req.user.role !== 'Job Seeker') {
+      res.status(403);
+      throw new Error('Only Job Seeker accounts can apply for jobs');
+    }
+
     if (String(job.postedBy) === String(req.user.id)) {
       res.status(400);
       throw new Error('You cannot apply for your own job posting');
     }
 
-    const alreadyApplied = job.applicants.includes(req.user.id);
+    const alreadyApplied = job.applicants.some(app => String(app.user) === String(req.user.id));
     if (alreadyApplied) {
       res.status(400);
       throw new Error('You have already applied for this job');
     }
 
-    job.applicants.push(req.user.id);
+    const applicantUser = await User.findById(req.user.id);
+    job.applicants.push({
+      user: req.user.id,
+      resumeUrl: applicantUser.resumeUrl || '',
+      status: 'applied',
+      appliedAt: new Date()
+    });
     await job.save();
 
     // Trigger notification to job poster
     try {
-      const applicantUser = await User.findById(req.user.id);
       await createNotification(req.app, {
         recipient: job.postedBy,
         sender: req.user.id,
@@ -116,7 +131,7 @@ const applyJob = async (req, res, next) => {
 
     const updatedJob = await Job.findById(job._id)
       .populate('postedBy', 'name email profilePicture')
-      .populate('applicants', 'name email profilePicture bio');
+      .populate('applicants.user', 'name email profilePicture bio');
 
     res.status(200).json({
       success: true,
@@ -154,9 +169,64 @@ const deleteJob = async (req, res, next) => {
   }
 };
 
+// PUT /api/jobs/:jobId/applicants/:applicantId
+const updateApplicantStatus = async (req, res, next) => {
+  try {
+    const { jobId, applicantId } = req.params;
+    const { status } = req.body;
+
+    if (!status || !['shortlisted', 'rejected'].includes(status)) {
+      res.status(400);
+      throw new Error('Invalid status. Must be shortlisted or rejected');
+    }
+
+    const job = await Job.findById(jobId);
+    if (!job) {
+      res.status(404);
+      throw new Error('Job not found');
+    }
+
+    if (String(job.postedBy) !== String(req.user.id)) {
+      res.status(403);
+      throw new Error('Unauthorized: Only the employer who posted this job can update applicant status');
+    }
+
+    const applicant = job.applicants.find(app => String(app.user) === String(applicantId));
+    if (!applicant) {
+      res.status(404);
+      throw new Error('Applicant not found for this job');
+    }
+
+    applicant.status = status;
+    await job.save();
+
+    // Trigger notification to Job Seeker
+    try {
+      await createNotification(req.app, {
+        recipient: applicantId,
+        sender: req.user.id,
+        type: status,
+        message: `Your job application for "${job.title}" at ${job.company} has been ${status}.`,
+        relatedId: job._id,
+      });
+    } catch (err) {
+      console.error('Failed to trigger status update notification:', err);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Applicant status updated to ${status}`,
+      job,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getJobs,
   createJob,
   applyJob,
   deleteJob,
+  updateApplicantStatus,
 };

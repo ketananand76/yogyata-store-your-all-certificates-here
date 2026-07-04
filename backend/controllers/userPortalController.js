@@ -24,11 +24,16 @@ const setTokenCookie = (res, userId) => {
 // POST /api/users/register
 const registerUser = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       res.status(400);
       throw new Error('Please fill in all fields (name, email, password)');
+    }
+
+    if (role && !['Job Seeker', 'Employer', 'HR Manager'].includes(role)) {
+      res.status(400);
+      throw new Error('Invalid role specified. Must be Job Seeker, Employer, or HR Manager');
     }
 
     // Validate email format strictly at registration
@@ -53,6 +58,7 @@ const registerUser = async (req, res, next) => {
       email,
       passwordHash,
       isVerified: true,
+      role: role || 'Job Seeker',
     });
 
     // Send notification email to admin
@@ -61,8 +67,8 @@ const registerUser = async (req, res, next) => {
       await sendEmail({
         to: 'ketanpaswan53@gmail.com',
         subject: 'New User Registered',
-        text: `A new user has registered on Yogyata.\n\nName: ${user.name}\nEmail: ${user.email}\nStatus: Active`,
-        html: `<p>A new user has registered on Yogyata.</p><p><strong>Name:</strong> ${user.name}<br><strong>Email:</strong> ${user.email}<br><strong>Status:</strong> Active</p>`
+        text: `A new user has registered on Yogyata.\n\nName: ${user.name}\nEmail: ${user.email}\nRole: ${user.role}\nStatus: Active`,
+        html: `<p>A new user has registered on Yogyata.</p><p><strong>Name:</strong> ${user.name}<br><strong>Email:</strong> ${user.email}<br><strong>Role:</strong> ${user.role}<br><strong>Status:</strong> Active</p>`
       });
     } catch (err) {
       console.error('Failed to send registration notification to admin:', err);
@@ -71,6 +77,12 @@ const registerUser = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: 'Registration successful! You can now log in to your account.',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }
     });
   } catch (error) {
     next(error);
@@ -112,6 +124,7 @@ const loginUser = async (req, res, next) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (error) {

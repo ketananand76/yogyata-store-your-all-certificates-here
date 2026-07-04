@@ -36,11 +36,23 @@ const protectUser = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Your account has been automatically blocked for violating moderation guidelines.' });
     }
 
-    req.user = decoded;
+    req.user = { id: decoded.id, role: userExists.role || 'Job Seeker' };
     next();
   } catch (error) {
     return res.status(401).json({ success: false, message: 'Session expired, please log in again' });
   }
 };
 
-module.exports = { protect, protectUser };
+const restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You do not have permission to perform this action'
+      });
+    }
+    next();
+  };
+};
+
+module.exports = { protect, protectUser, restrictTo };

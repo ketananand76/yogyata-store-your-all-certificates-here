@@ -226,7 +226,7 @@ const deleteComment = async (req, res, next) => {
 const updateAdvancedProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { name, bio, gender, privateAccount, website, github, linkedin, skills, password } = req.body;
+    const { name, bio, gender, privateAccount, website, github, linkedin, skills, password, experience, education, resumeUrl } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -234,13 +234,22 @@ const updateAdvancedProfile = async (req, res, next) => {
       throw new Error('User not found');
     }
 
-    // Photo upload handling (Cloudinary)
+    // Photo / Resume upload handling (Cloudinary or local disk fallback)
     if (req.file) {
       const cloudinaryResult = await uploadToCloudinary(req.file.path);
+      const isPdf = req.file.mimetype.includes('pdf') || req.file.originalname.toLowerCase().endsWith('.pdf');
+      
+      let fileUrl = '';
       if (cloudinaryResult) {
-        user.profilePicture = cloudinaryResult.url;
+        fileUrl = cloudinaryResult.url;
       } else {
-        user.profilePicture = `/uploads/${req.file.filename}`;
+        fileUrl = `/uploads/${req.file.filename}`;
+      }
+
+      if (isPdf || req.body.isResume === 'true') {
+        user.resumeUrl = fileUrl;
+      } else {
+        user.profilePicture = fileUrl;
       }
     }
 
@@ -249,6 +258,7 @@ const updateAdvancedProfile = async (req, res, next) => {
     user.bio = bio !== undefined ? bio : user.bio;
     user.gender = gender !== undefined ? gender : user.gender;
     user.privateAccount = privateAccount !== undefined ? privateAccount === 'true' || privateAccount === true : user.privateAccount;
+    user.resumeUrl = resumeUrl !== undefined ? resumeUrl : user.resumeUrl;
 
     // Links update
     if (user.links) {
@@ -266,6 +276,16 @@ const updateAdvancedProfile = async (req, res, next) => {
     // Skills array update
     if (skills !== undefined) {
       user.skills = Array.isArray(skills) ? skills : JSON.parse(skills || '[]');
+    }
+
+    // Experience array update
+    if (experience !== undefined) {
+      user.experience = Array.isArray(experience) ? experience : JSON.parse(experience || '[]');
+    }
+
+    // Education array update
+    if (education !== undefined) {
+      user.education = Array.isArray(education) ? education : JSON.parse(education || '[]');
     }
 
     // Password change
@@ -290,6 +310,10 @@ const updateAdvancedProfile = async (req, res, next) => {
         skills: updatedUser.skills,
         followers: updatedUser.followers,
         following: updatedUser.following,
+        role: updatedUser.role,
+        resumeUrl: updatedUser.resumeUrl,
+        experience: updatedUser.experience,
+        education: updatedUser.education,
       },
     });
   } catch (error) {

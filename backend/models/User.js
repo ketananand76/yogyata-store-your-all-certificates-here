@@ -86,6 +86,35 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    role: {
+      type: String,
+      enum: ['Job Seeker', 'Employer', 'HR Manager'],
+      default: 'Job Seeker',
+    },
+    resumeUrl: {
+      type: String,
+      default: '',
+    },
+    experience: [
+      {
+        company: { type: String, required: true },
+        title: { type: String, required: true },
+        startDate: { type: String },
+        endDate: { type: String },
+        current: { type: Boolean, default: false },
+        description: { type: String, default: '' },
+      }
+    ],
+    education: [
+      {
+        school: { type: String, required: true },
+        degree: { type: String, required: true },
+        fieldOfStudy: { type: String },
+        startDate: { type: String },
+        endDate: { type: String },
+        description: { type: String, default: '' },
+      }
+    ],
   },
   { timestamps: true }
 );

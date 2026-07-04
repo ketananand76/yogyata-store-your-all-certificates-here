@@ -68,7 +68,7 @@ const {
   deleteUserCertificate,
   verifyUser,
 } = require('./controllers/userPortalController');
-const { getJobs, createJob, applyJob, deleteJob } = require('./controllers/jobController');
+const { getJobs, createJob, applyJob, deleteJob, updateApplicantStatus } = require('./controllers/jobController');
 const {
   toggleFollow,
   searchUsers,
@@ -88,7 +88,7 @@ const {
   getAdminAlerts, deleteAlert, unblockUser 
 } = require('./controllers/adminMonitorController');
 const { requestPremium, getMyPaymentStatus, getPendingPayments, verifyPayment } = require('./controllers/paymentController');
-const { protectUser } = require('./middleware/authMiddleware');
+const { protectUser, restrictTo } = require('./middleware/authMiddleware');
 
 // Serve local static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -121,30 +121,30 @@ app.get('/api/social/users', protectUser, getAllUsers);
 app.get('/api/social/profile/:id', protectUser, getUserProfile);
 app.post('/api/social/report-abusive', protectUser, reportAbusiveLanguage);
 
-// 4. Message / Chat routes
-app.get('/api/messages/unread/counts', protectUser, getUnreadCounts);
-app.get('/api/messages/:userId', protectUser, getChatMessages);
-app.put('/api/messages/:userId/read', protectUser, markAsRead);
+// 4. Message / Chat routes (DISABLED for Job/Career Platform MVP phase)
+// app.get('/api/messages/unread/counts', protectUser, getUnreadCounts);
+// app.get('/api/messages/:userId', protectUser, getChatMessages);
+// app.put('/api/messages/:userId/read', protectUser, markAsRead);
 app.get('/api/notifications', protectUser, getNotifications);
 app.put('/api/notifications/read', protectUser, markAllAsRead);
-app.post('/api/messages/upload', protectUser, upload.single('file'), async (req, res, next) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file uploaded' });
-    }
-    const { uploadToCloudinary } = require('./config/cloudinary');
-    const cloudinaryResult = await uploadToCloudinary(req.file.path);
-    let fileUrl = '';
-    if (cloudinaryResult) {
-      fileUrl = cloudinaryResult.url;
-    } else {
-      fileUrl = `/uploads/${req.file.filename}`;
-    }
-    res.status(200).json({ success: true, fileUrl });
-  } catch (error) {
-    next(error);
-  }
-});
+// app.post('/api/messages/upload', protectUser, upload.single('file'), async (req, res, next) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ success: false, message: 'No file uploaded' });
+//     }
+//     const { uploadToCloudinary } = require('./config/cloudinary');
+//     const cloudinaryResult = await uploadToCloudinary(req.file.path);
+//     let fileUrl = '';
+//     if (cloudinaryResult) {
+//       fileUrl = cloudinaryResult.url;
+//     } else {
+//       fileUrl = `/uploads/${req.file.filename}`;
+//     }
+//     res.status(200).json({ success: true, fileUrl });
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 // 5. Admin Monitoring routes
 app.get('/api/admin/users-monitor', protect, getUsersAndCertificates);
@@ -170,6 +170,7 @@ app.get('/api/jobs', protectUser, getJobs);
 app.post('/api/jobs', protectUser, createJob);
 app.post('/api/jobs/:id/apply', protectUser, applyJob);
 app.delete('/api/jobs/:id', protectUser, deleteJob);
+app.put('/api/jobs/:jobId/applicants/:applicantId', protectUser, restrictTo('Employer', 'HR Manager'), updateApplicantStatus);
 
 // 9. Payment & Premium routes
 app.post('/api/payments/request', protectUser, requestPremium);
